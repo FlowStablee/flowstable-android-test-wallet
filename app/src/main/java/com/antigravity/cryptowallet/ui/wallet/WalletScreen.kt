@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.antigravity.cryptowallet.data.blockchain.BlockchainService
 import com.antigravity.cryptowallet.data.blockchain.NetworkRepository
+import com.antigravity.cryptowallet.data.wallet.AssetRepository
 import com.antigravity.cryptowallet.data.wallet.WalletRepository
 import com.antigravity.cryptowallet.ui.components.BrutalistButton
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
