@@ -72,7 +72,9 @@ fun MainScreen(
                 HistoryScreen()
             }
             composable("settings") {
-                PlaceholderScreen("Settings\n(Security, Network, etc.)")
+                com.antigravity.cryptowallet.ui.settings.SettingsScreen(
+                    onSetupSecurity = onNavigateToSecuritySetup
+                )
             }
         }
     }
