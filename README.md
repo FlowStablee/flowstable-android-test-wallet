@@ -1,28 +1,91 @@
-# FlowStable Wallet (EVM)
+# 🪐 Antigravity Wallet
 
-A high-performance, non-custodial EVM wallet for Android built with Jetpack Compose and following strict Brutalist design principles.
+[![Android Build](https://github.com/FlowStablee/flowstable-android-test-wallet/actions/workflows/android.yml/badge.svg)](https://github.com/FlowStablee/flowstable-android-test-wallet/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-purple.svg)](https://kotlinlang.org/)
+[![Compose](https://img.shields.io/badge/Jetpack-Compose-green.svg)](https://developer.android.com/jetpack/compose)
 
-## Features
-- **Strict Black & White UI**: No colors, gradients, or shadows.
-- **Non-Custodial**: Keys generated via BIP-39 and stored encrypted using Android Keystore.
-- **Multi-Chain**: Supports Ethereum, Arbitrum, Optimism, Polygon, BSC.
-- **Secure**: App-level encryption, screenshot prevention, clipboard protection.
-- **Performance**: Parallel RPC calls, aggressive caching.
+**Antigravity** is a high-performance, non-custodial EVM wallet for Android. Built with a raw, **Brutalist Design Aesthetic**, it prioritizes speed, security, and a uncompromising user experience.
 
-## Architecture
-- **MVVM**: Clean separation of UI and Logic.
-- **Hilt**: Dependency Injection.
-- **Web3j**: Blockchain interaction.
-- **EncryptedSharedPreferences**: Secure storage.
+---
 
-## Threat Model (Summary)
-- **Key Extraction**: Mitigated by using Android Keystore (Tee-backed where available). Keys are never stored in plain text.
-- **Memory Dump**: Keys are kept in memory only while needed. `SecureStorage` handles persistence securely.
-- **Screen Scrapers**: `FLAG_SECURE` prevents screenshots and screen recording.
-- **Clipboard Attacks**: Seed phrase is never automatically copied needed. User must manually write it down.
-- **Network Attacks**: All RPC communication is over HTTPS. Use of public RPCs entails some privacy leakage (IP, addresses), mitigated by allowing custom RPC URLs in future updates.
+## 🛠 Features
 
-## Build Instructions
-1. Open in Android Studio Hedgehog or later.
-2. Sync Gradle.
-3. Build & Run on Emulator/Device (Min SDK 26).
+### 💎 Wallet Management
+- **Non-Custodial**: Your keys, your crypto. Generated via BIP-39 mnemonic phrases.
+- **Multi-Chain Support**: Ethereum, Polygon, BSC, Arbitrum, Optimism, and more.
+- **Asset Tracking**: Real-time balance updates and price tracking via CoinGecko.
+- **Custom Tokens**: Add any ERC-20 token by contract address.
+- **QR Support**: Integrated QR code generation for effortless receiving.
+
+### 🌐 Web3 Browser (DApp Gateway)
+- **EIP-1193 Injection**: Full support for connecting to dApps (PancakeSwap, Uniswap, etc.).
+- **Secure Signatures**: In-app confirmation dialogs for `personal_sign` and `eth_sendTransaction`.
+- **Advanced Compatibility**: Optimized WebView with DOM storage and database support.
+
+### 📜 Transaction History
+- **Local Persistence**: Full history stored locally via Room DB for instant access.
+- **Brutalist UI**: Clear, high-contrast list showing transaction status, amounts, and timestamps.
+
+### 🛡 Security First
+- **Biometric Authentication**: Fingerprint and Face Unlock support.
+- **PIN Protection**: Custom secure Numpad for app access.
+- **AES Encryption**: Seed phrases and private keys encrypted using Android Keystore (TEE-backed).
+- **Advanced Privacy**: Anti-screenshot protection and clipboard security.
+
+---
+
+## 🚀 Tech Stack
+
+| Category | Technology |
+| :--- | :--- |
+| **Language** | Kotlin |
+| **UI Framework** | Jetpack Compose (100%) |
+| **Blockchain** | Web3j |
+| **Architecture** | MVVM + Clean Architecture |
+| **DI** | Hilt |
+| **Database** | Room |
+| **Networking** | Retrofit + OkHttp |
+| **Security** | Android Keystore / Biometrics |
+
+---
+
+## 📦 Build Instructions
+
+### Prerequisites
+- Android Studio Hedgehog (2023.1.1) or later.
+- JDK 17.
+- Android SDK 34 (Target).
+
+### Step-by-Step
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/FlowStablee/flowstable-android-test-wallet.git
+   ```
+2. **Open in Android Studio**
+   Wait for Gradle to sync.
+3. **Build APK**
+   - Click `Build > Build Bundle(s) / APK(s) > Build APK(s)`.
+4. **Run**
+   - Use an emulator (API 26+) or a physical device.
+
+---
+
+## 📐 Architecture Overview
+
+The app follows **Modern Android Development (MAD)** practices:
+- **UI Layer**: Composable screens observing StateFlows from ViewModels.
+- **Domain Layer**: Repositories abstracting data sources (Blockchain, Local DB, API).
+- **Data Layer**: Room DAOs, Retrofit Interfaces, and SecureStorage.
+
+---
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+<p align="center">
+  <i>Built with 🖤 by Antigravity Team</i>
+</p>
