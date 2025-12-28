@@ -29,10 +29,14 @@ import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
 @Composable
-fun BrowserScreen() {
-    var url by remember { mutableStateOf("https://google.com") }
-    var inputUrl by remember { mutableStateOf("https://google.com") }
+fun BrowserScreen(
+    walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository = androidx.hilt.navigation.compose.hiltViewModel<BrowserViewModel>().walletRepository
+) {
+    var url by remember { mutableStateOf("https://pancakeswap.finance") }
+    var inputUrl by remember { mutableStateOf("https://pancakeswap.finance") }
     var webView: WebView? by remember { mutableStateOf(null) }
+    
+    val address = walletRepository.getAddress()
 
     Column(
         modifier = Modifier
@@ -78,10 +82,22 @@ fun BrowserScreen() {
                 WebView(context).apply {
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
+                    
+                    val bridge = Web3Bridge(this, address)
+                    addJavascriptInterface(bridge, "androidWallet")
+                    
                     webViewClient = object : WebViewClient() {
+                        override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                            super.onPageStarted(view, url, favicon)
+                            // Inject provider as early as possible
+                            view?.evaluateJavascript(bridge.getInjectionJs(), null)
+                        }
+                        
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
                             if (url != null) inputUrl = url
+                            // Re-inject in case of dynamic page updates
+                            view?.evaluateJavascript(bridge.getInjectionJs(), null)
                         }
                     }
                     loadUrl(url)
