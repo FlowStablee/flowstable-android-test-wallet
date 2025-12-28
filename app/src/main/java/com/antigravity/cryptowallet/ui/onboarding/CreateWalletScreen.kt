@@ -95,7 +95,7 @@ fun CreateWalletScreen(
             .padding(16.dp)
     ) {
         if (viewModel.step == CreateWalletStep.ShowPhrase) {
-            BrutalistHeader("Secret Phase")
+            BrutalistHeader("Secret Phrase")
 
             Text(
                 text = "WRITE THIS DOWN. IF YOU LOSE IT, YOU LOSE YOUR FUNDS FOREVER.",
