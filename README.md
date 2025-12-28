@@ -1,4 +1,4 @@
-# 🪐 Antigravity Wallet
+# 🪐 FlowStable Wallet
 
 [![Android Build](https://github.com/FlowStablee/flowstable-android-test-wallet/actions/workflows/android.yml/badge.svg)](https://github.com/FlowStablee/flowstable-android-test-wallet/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
