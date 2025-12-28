@@ -42,36 +42,43 @@ import com.antigravity.cryptowallet.utils.QrCodeGenerator
 @HiltViewModel
 class WalletViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
-    private val networkRepository: NetworkRepository,
-    private val blockchainService: BlockchainService
+    private val assetRepository: AssetRepository
 ) : ViewModel() {
-    var address by mutableStateOf("Loading...")
-    var balance by mutableStateOf("0.00 ETH")
+    val address = walletRepository.getAddress()
+    
+    // UI State
+    var totalBalanceUsd by mutableStateOf("$0.00")
+    var assets by mutableStateOf<List<com.antigravity.cryptowallet.data.models.AssetUiModel>>(emptyList())
+    
+    // Tab State
+    var selectedTab by mutableStateOf(0) // 0 = Assets, 1 = NFTs
 
     init {
-        loadWallet()
+        loadData()
     }
-
-    private fun loadWallet() {
-        if (!walletRepository.isWalletCreated()) return
-        
-        // Ensure wallet is loaded
-        if (walletRepository.activeCredentials == null) {
-            walletRepository.loadWallet()
-        }
-        
-        address = walletRepository.getAddress()
-        fetchBalance()
-    }
-
-    private fun fetchBalance() {
+    
+    fun addToken(address: String, symbol: String, decimals: Int) {
         viewModelScope.launch {
-            val network = networkRepository.getNetwork("eth") // Default to ETH for now
-            val rawBalance = blockchainService.getBalance(network.rpcUrl, address)
+            // Default to ETH chain for now for custom tokens
+            assetRepository.addToken(address, symbol, decimals, "eth", symbol)
+        }
+    }
+
+    private fun loadData() {
+        viewModelScope.launch {
+            if (!walletRepository.isWalletCreated()) return@launch
             
-            // Convert Wei to Eth (Simple division for display)
-            val ethBalance = BigDecimal(rawBalance).divide(BigDecimal.TEN.pow(18))
-            balance = String.format("%.4f %s", ethBalance, network.symbol)
+            // Collect assets
+            launch {
+                assetRepository.assets.collect { assetList ->
+                    assets = assetList
+                    val total = assetList.sumOf { it.rawBalance * it.price }
+                    totalBalanceUsd = String.format("$%.2f", total)
+                }
+            }
+            
+            // Trigger refresh
+            assetRepository.refreshAssets()
         }
     }
 }
@@ -88,6 +95,56 @@ fun WalletScreen(
     ) {
         val clipboardManager = LocalClipboardManager.current
         var showReceiveDialog by remember { mutableStateOf(false) }
+        var showAddTokenDialog by remember { mutableStateOf(false) }
+
+        if (showAddTokenDialog) {
+            var inputAddress by remember { mutableStateOf("") }
+            var inputSymbol by remember { mutableStateOf("") }
+            var inputDecimals by remember { mutableStateOf("18") }
+
+            Dialog(onDismissRequest = { showAddTokenDialog = false }) {
+                Column(
+                    modifier = Modifier
+                        .background(BrutalWhite)
+                        .border(2.dp, BrutalBlack)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    BrutalistHeader("Add Token")
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    androidx.compose.material3.OutlinedTextField(
+                        value = inputAddress,
+                        onValueChange = { inputAddress = it },
+                        label = { Text("Contract Address") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = inputSymbol,
+                        onValueChange = { inputSymbol = it },
+                        label = { Text("Symbol (e.g. USDC)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = inputDecimals,
+                        onValueChange = { inputDecimals = it },
+                        label = { Text("Decimals") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    BrutalistButton(text = "Add", onClick = { 
+                        if (inputAddress.isNotEmpty() && inputSymbol.isNotEmpty()) {
+                            viewModel.addToken(inputAddress, inputSymbol.uppercase(), inputDecimals.toIntOrNull() ?: 18)
+                            showAddTokenDialog = false
+                        }
+                    })
+                }
+            }
+        }
 
         if (showReceiveDialog) {
             Dialog(onDismissRequest = { showReceiveDialog = false }) {
@@ -101,7 +158,7 @@ fun WalletScreen(
                     BrutalistHeader("Receive Assets")
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (viewModel.address.length > 10) { // Basic check to ensure address is valid
+                    if (viewModel.address.length > 10) { 
                         val qrBitmap = remember(viewModel.address) {
                             QrCodeGenerator.generateQrCode(viewModel.address)
                         }
@@ -147,19 +204,95 @@ fun WalletScreen(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = viewModel.balance,
+            text = viewModel.totalBalanceUsd,
             color = BrutalBlack,
             fontSize = 42.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = (-1).sp
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
-        BrutalistInfoRow("Address", viewModel.address.take(6) + "..." + viewModel.address.takeLast(4))
-        BrutalistInfoRow("Network", "Ethereum Mainnet")
+        // Tabs
+        Row(
+            modifier = Modifier.fillMaxWidth().border(1.dp, BrutalBlack)
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(if (viewModel.selectedTab == 0) BrutalBlack else BrutalWhite)
+                    .clickable { viewModel.selectedTab = 0 }
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Assets", 
+                    color = if (viewModel.selectedTab == 0) BrutalWhite else BrutalBlack,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(if (viewModel.selectedTab == 1) BrutalBlack else BrutalWhite)
+                    .clickable { viewModel.selectedTab = 1 }
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "NFTs", 
+                    color = if (viewModel.selectedTab == 1) BrutalWhite else BrutalBlack,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (viewModel.selectedTab == 0) {
+            // Asset List
+            androidx.compose.foundation.lazy.LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(viewModel.assets.size) { index ->
+                    val asset = viewModel.assets[index]
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, BrutalBlack)
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(asset.symbol, fontWeight = FontWeight.Bold, color = BrutalBlack)
+                            Text(asset.networkName, fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.Gray)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(asset.balanceUsd, fontWeight = FontWeight.Bold, color = BrutalBlack)
+                            Text(asset.balance, fontSize = 12.sp, color = BrutalBlack)
+                        }
+                    }
+                }
+                
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    BrutalistButton("Add Token +", onClick = { showAddTokenDialog = true }, inverted = true)
+                }
+            }
+        } else {
+            // NFTs Placeholder
+            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("No NFTs found", fontWeight = FontWeight.Bold, color = BrutalBlack)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    BrutalistButton("Find NFTs", onClick = { }, inverted = true)
+                }
+            }
+        }
         
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(16.dp))
         
         Row(
             modifier = Modifier.fillMaxWidth(),
