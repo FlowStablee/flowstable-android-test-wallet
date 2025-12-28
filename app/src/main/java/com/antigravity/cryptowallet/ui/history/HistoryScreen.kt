@@ -50,7 +50,7 @@ fun HistoryScreen(
             BrutalistHeader("History")
             IconButton(onClick = { viewModel.refresh() }) { // Changed to IconButton
                 Icon(
-                    imageVector = Icons.Default.Refresh, 
+                    imageVector = Icons.Filled.Refresh, 
                     contentDescription = "Sync",
                     tint = BrutalBlack,
                     modifier = Modifier.size(32.dp)

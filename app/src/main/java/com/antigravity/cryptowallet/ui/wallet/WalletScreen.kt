@@ -311,7 +311,7 @@ fun WalletScreen(
                     onClick = { viewModel.refresh() }
                 ) {
                     androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "Refresh",
                         tint = BrutalBlack,
                         modifier = Modifier.size(32.dp)
