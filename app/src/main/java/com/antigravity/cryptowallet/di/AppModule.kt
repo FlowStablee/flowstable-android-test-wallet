@@ -46,12 +46,19 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "wallet_db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
     fun provideTokenDao(database: AppDatabase): TokenDao {
         return database.tokenDao()
+    }
+
+    @Provides
+    fun provideTransactionDao(database: AppDatabase): com.antigravity.cryptowallet.data.db.TransactionDao {
+        return database.transactionDao()
     }
 
     @Provides

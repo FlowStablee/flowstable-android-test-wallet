@@ -23,6 +23,7 @@ import com.antigravity.cryptowallet.ui.components.BottomNavItem
 import com.antigravity.cryptowallet.ui.components.BrutalistBottomBar
 import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.wallet.WalletScreen
+import com.antigravity.cryptowallet.ui.history.HistoryScreen
 
 @Composable
 fun MainScreen(
@@ -68,7 +69,7 @@ fun MainScreen(
                 PlaceholderScreen("Web3 Browser\n(Coming Soon)")
             }
             composable("history") {
-                PlaceholderScreen("Transaction History\n(No transactions yet)")
+                HistoryScreen()
             }
             composable("settings") {
                 PlaceholderScreen("Settings\n(Security, Network, etc.)")
