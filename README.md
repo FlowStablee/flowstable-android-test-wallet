@@ -87,5 +87,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ---
 
 <p align="center">
-  <i>Built with 🖤 by Antigravity Team</i>
+  <i>Built with 🖤 by FlowStable Labs </i>
 </p>
