@@ -37,14 +37,46 @@ class CreateWalletViewModel @Inject constructor(
 ) : ViewModel() {
     var mnemonic by mutableStateOf<List<String>>(emptyList())
     var isCreated by mutableStateOf(false)
+    var step by mutableStateOf(CreateWalletStep.ShowPhrase)
+    var verificationIndices by mutableStateOf<List<Int>>(emptyList())
+    // We use a map for entered words: Index -> Word
+    var enteredWords = mutableStateOf(mapOf<Int, String>())
+    var verificationError by mutableStateOf<String?>(null)
 
     fun generateWallet() {
-        if (!isCreated) {
+        if (mnemonic.isEmpty()) {
             val phrase = walletRepository.createWallet()
             mnemonic = phrase.split(" ")
-            isCreated = true
         }
     }
+
+    fun startVerification() {
+        verificationIndices = (0 until mnemonic.size).shuffled().take(3).sorted()
+        step = CreateWalletStep.VerifyPhrase
+    }
+
+    fun updateEnteredWord(index: Int, word: String) {
+        enteredWords.value = enteredWords.value.toMutableMap().apply {
+            put(index, word)
+        }
+    }
+
+    fun verifyAndComplete(): Boolean {
+        for (index in verificationIndices) {
+            val entered = enteredWords.value[index]?.trim() ?: ""
+            if (entered != mnemonic[index]) {
+                verificationError = "Word #${index + 1} is incorrect."
+                return false
+            }
+        }
+        isCreated = true
+        return true
+    }
+}
+
+enum class CreateWalletStep {
+    ShowPhrase,
+    VerifyPhrase
 }
 
 @Composable
@@ -62,48 +94,106 @@ fun CreateWalletScreen(
             .background(BrutalWhite)
             .padding(16.dp)
     ) {
-        BrutalistHeader("Secret Phase")
+        if (viewModel.step == CreateWalletStep.ShowPhrase) {
+            BrutalistHeader("Secret Phase")
 
-        Text(
-            text = "WRITE THIS DOWN. IF YOU LOSE IT, YOU LOSE YOUR FUNDS FOREVER.",
-            color = BrutalBlack,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+            Text(
+                text = "WRITE THIS DOWN. IF YOU LOSE IT, YOU LOSE YOUR FUNDS FOREVER.",
+                color = BrutalBlack,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            itemsIndexed(viewModel.mnemonic) { index, word ->
-                Box(
-                    modifier = Modifier
-                        .border(1.dp, BrutalBlack)
-                        .padding(12.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Row {
-                        Text(
-                            text = "${index + 1}. ",
-                            fontWeight = FontWeight.Bold,
-                            color = BrutalBlack
-                        )
-                        Text(
-                            text = word,
-                            color = BrutalBlack
-                        )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                itemsIndexed(viewModel.mnemonic) { index, word ->
+                    Box(
+                        modifier = Modifier
+                            .border(1.dp, BrutalBlack)
+                            .padding(12.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row {
+                            Text(
+                                text = "${index + 1}. ",
+                                fontWeight = FontWeight.Bold,
+                                color = BrutalBlack
+                            )
+                            Text(
+                                text = word,
+                                color = BrutalBlack
+                            )
+                        }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            BrutalistButton(
+                text = "I Have Saved It",
+                onClick = { viewModel.startVerification() }
+            )
+        } else {
+            BrutalistHeader("Verify Phrase")
+            
+            Text(
+                text = "Enter the requested words to verify you saved them.",
+                color = BrutalBlack,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                viewModel.verificationIndices.forEach { index ->
+                    Column {
+                        Text(
+                            text = "Word #${index + 1}",
+                            fontWeight = FontWeight.Bold,
+                            color = BrutalBlack,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        androidx.compose.material3.OutlinedTextField(
+                            value = viewModel.enteredWords.value[index] ?: "",
+                            onValueChange = { viewModel.updateEnteredWord(index, it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = BrutalBlack,
+                                unfocusedBorderColor = BrutalBlack,
+                                focusedTextColor = BrutalBlack,
+                                unfocusedTextColor = BrutalBlack,
+                                cursorColor = BrutalBlack
+                            )
+                        )
+                    }
+                }
+                
+                if (viewModel.verificationError != null) {
+                    Text(
+                        text = viewModel.verificationError!!,
+                        color = androidx.compose.ui.graphics.Color.Red,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            BrutalistButton(
+                text = "Verify & Create",
+                onClick = {
+                    if (viewModel.verifyAndComplete()) {
+                        onWalletCreated()
+                    }
+                }
+            )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        BrutalistButton(
-            text = "I Have Saved It",
-            onClick = onWalletCreated
-        )
     }
 }

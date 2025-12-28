@@ -29,6 +29,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.window.Dialog
+import com.antigravity.cryptowallet.utils.QrCodeGenerator
 
 @HiltViewModel
 class WalletViewModel @Inject constructor(
@@ -77,6 +86,56 @@ fun WalletScreen(
             .background(BrutalWhite)
             .padding(16.dp)
     ) {
+        val clipboardManager = LocalClipboardManager.current
+        var showReceiveDialog by remember { mutableStateOf(false) }
+
+        if (showReceiveDialog) {
+            Dialog(onDismissRequest = { showReceiveDialog = false }) {
+                Column(
+                    modifier = Modifier
+                        .background(BrutalWhite)
+                        .border(2.dp, BrutalBlack)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    BrutalistHeader("Receive Assets")
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (viewModel.address.length > 10) { // Basic check to ensure address is valid
+                        val qrBitmap = remember(viewModel.address) {
+                            QrCodeGenerator.generateQrCode(viewModel.address)
+                        }
+                        Image(
+                            bitmap = qrBitmap.asImageBitmap(),
+                            contentDescription = "Wallet Address QR Code",
+                            modifier = Modifier.size(200.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = viewModel.address,
+                        fontWeight = FontWeight.Bold,
+                        color = BrutalBlack,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.clickable {
+                            clipboardManager.setText(AnnotatedString(viewModel.address))
+                        }
+                    )
+                    Text(
+                        text = "(Tap address to copy)",
+                        fontSize = 12.sp,
+                        color = BrutalBlack
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    BrutalistButton(text = "Close", onClick = { showReceiveDialog = false })
+                }
+            }
+        }
+
         BrutalistHeader("Dashboard")
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -107,7 +166,7 @@ fun WalletScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Box(modifier = Modifier.weight(1f)) {
-                BrutalistButton(text = "Receive", onClick = { })
+                BrutalistButton(text = "Receive", onClick = { showReceiveDialog = true })
             }
             Box(modifier = Modifier.weight(1f)) {
                 BrutalistButton(text = "Send", onClick = { }, inverted = true)
