@@ -28,10 +28,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.antigravity.cryptowallet.data.wallet.WalletRepository
+
 @Composable
 fun BrowserScreen(
-    walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository = androidx.hilt.navigation.compose.hiltViewModel<BrowserViewModel>().walletRepository
+    viewModel: BrowserViewModel = hiltViewModel()
 ) {
+    val walletRepository = viewModel.walletRepository
     var url by remember { mutableStateOf("https://pancakeswap.finance") }
     var inputUrl by remember { mutableStateOf("https://pancakeswap.finance") }
     var webView: WebView? by remember { mutableStateOf(null) }
