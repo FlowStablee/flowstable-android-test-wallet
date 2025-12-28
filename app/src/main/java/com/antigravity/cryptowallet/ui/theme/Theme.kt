@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.sp
 
 val Black = Color(0xFF000000)
 val White = Color(0xFFFFFFFF)
+val BrutalBlack = Black
+val BrutalWhite = White
 
 private val DarkColorScheme = darkColorScheme(
     primary = White,

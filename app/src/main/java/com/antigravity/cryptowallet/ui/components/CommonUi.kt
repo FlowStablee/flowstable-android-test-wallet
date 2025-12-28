@@ -27,9 +27,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import com.antigravity.cryptowallet.ui.theme.BrutalBlack
+import com.antigravity.cryptowallet.ui.theme.BrutalWhite
+
 // STRICT BLACK AND WHITE PALETTE
-val BrutalBlack = Color.Black
-val BrutalWhite = Color.White
 
 @Composable
 fun BrutalistButton(
