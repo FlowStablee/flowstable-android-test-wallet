@@ -66,7 +66,7 @@ fun MainScreen(
                 WalletScreen(onSetupSecurity = onNavigateToSecuritySetup)
             }
             composable("browser") {
-                PlaceholderScreen("Web3 Browser\n(Coming Soon)")
+                com.antigravity.cryptowallet.ui.browser.BrowserScreen()
             }
             composable("history") {
                 HistoryScreen()
