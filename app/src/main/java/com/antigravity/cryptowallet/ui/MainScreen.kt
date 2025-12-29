@@ -31,8 +31,6 @@ fun MainScreen(
     onNavigateToRevealSeed: () -> Unit,
     onNavigateToTransfer: () -> Unit,
     onNavigateToAppInfo: () -> Unit,
-    onNavigateToTransfer: () -> Unit,
-    onNavigateToAppInfo: () -> Unit,
     onNavigateToTokenDetail: (String) -> Unit,
     onNavigateToWalletConnect: () -> Unit
 ) {
