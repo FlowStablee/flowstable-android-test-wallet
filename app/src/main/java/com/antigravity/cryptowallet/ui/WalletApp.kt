@@ -145,6 +145,8 @@ fun WalletApp(startDestination: String = "intro") {
                     }
                 }
             )
+        }
+
         composable(
             route = "token_detail/{symbol}",
             arguments = listOf(
