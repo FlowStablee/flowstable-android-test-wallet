@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -167,8 +169,9 @@ fun WalletScreen(
             Dialog(onDismissRequest = { showNetworkSelector = false }) {
                 Column(
                     modifier = Modifier
-                        .background(BrutalWhite)
-                        .border(2.dp, BrutalBlack)
+                        .background(BrutalWhite, RoundedCornerShape(24.dp))
+                        .border(2.dp, BrutalBlack, RoundedCornerShape(24.dp))
+                        .clip(RoundedCornerShape(24.dp))
                         .padding(24.dp)
                 ) {
                     BrutalistHeader("Switch Network")
@@ -183,7 +186,8 @@ fun WalletScreen(
                                         viewModel.switchNetwork(net.id)
                                         showNetworkSelector = false
                                     }
-                                    .background(if (viewModel.activeNetwork.id == net.id) BrutalBlack else BrutalWhite)
+                                    .background(if (viewModel.activeNetwork.id == net.id) BrutalBlack else BrutalWhite, RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .padding(12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -304,7 +308,7 @@ fun WalletScreen(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(8.dp).background(Color.Green))
+                    Box(modifier = Modifier.size(8.dp).background(Color.Green, androidx.compose.foundation.shape.CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         viewModel.activeNetwork.name.uppercase(),
@@ -358,7 +362,7 @@ fun WalletScreen(
         
         // Tabs
         Row(
-            modifier = Modifier.fillMaxWidth().border(1.dp, BrutalBlack)
+            modifier = Modifier.fillMaxWidth().border(1.dp, BrutalBlack, RoundedCornerShape(12.dp)).clip(RoundedCornerShape(12.dp))
         ) {
             Box(
                 modifier = Modifier
@@ -403,15 +407,33 @@ fun WalletScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, BrutalBlack)
-                            .clickable { onNavigateToTokenDetail(asset.symbol) }
+                            .border(1.dp, BrutalBlack, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onNavigateToTokenDetail(asset.symbol) }
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(asset.symbol, fontWeight = FontWeight.Bold, color = BrutalBlack)
-                            Text(asset.networkName, fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.Gray)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(BrutalBlack, androidx.compose.foundation.shape.CircleShape)
+                                    .clip(androidx.compose.foundation.shape.CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    asset.symbol.take(1), 
+                                    color = BrutalWhite, 
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 18.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(asset.symbol, fontWeight = FontWeight.Bold, color = BrutalBlack)
+                                Text(asset.networkName, fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.Gray)
+                            }
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(asset.balanceUsd, fontWeight = FontWeight.Bold, color = BrutalBlack)
@@ -445,11 +467,13 @@ fun WalletScreen(
             BrutalistButton(
                 text = "Send",
                 onClick = onNavigateToSend,
+                icon = androidx.compose.material.icons.Icons.Default.ArrowOutward,
                 modifier = Modifier.weight(1f)
             )
             BrutalistButton(
                 text = "Receive",
                 onClick = { showReceiveDialog = true },
+                icon = androidx.compose.material.icons.Icons.Default.FileDownload,
                 modifier = Modifier.weight(1f),
                 inverted = true
             )

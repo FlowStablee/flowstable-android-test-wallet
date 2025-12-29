@@ -3,6 +3,8 @@ package com.antigravity.cryptowallet.ui.onboarding
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -92,7 +94,9 @@ fun CreateWalletScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(BrutalWhite)
-            .padding(16.dp)
+            .border(2.dp, BrutalBlack, RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .padding(12.dp),
     ) {
         if (viewModel.step == CreateWalletStep.ShowPhrase) {
             BrutalistHeader("Secret Phrase")
@@ -113,7 +117,8 @@ fun CreateWalletScreen(
                 itemsIndexed(viewModel.mnemonic) { index, word ->
                     Box(
                         modifier = Modifier
-                            .border(1.dp, BrutalBlack)
+                            .border(1.dp, BrutalBlack, RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .padding(12.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {

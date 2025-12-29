@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -72,7 +74,8 @@ fun ShowSeedScreen(
 fun SeedWordItem(index: Int, word: String) {
     Row(
         modifier = Modifier
-            .border(2.dp, BrutalBlack)
+            .border(2.dp, BrutalBlack, RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

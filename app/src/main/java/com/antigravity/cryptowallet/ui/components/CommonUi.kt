@@ -39,7 +39,8 @@ fun BrutalistButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     inverted: Boolean = false,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
     val backgroundColor = if (inverted) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
     val contentColor = if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background
@@ -60,20 +61,34 @@ fun BrutalistButton(
             disabledContainerColor = Color.Gray,
             disabledContentColor = Color.LightGray
         ),
-        shape = RectangleShape, // No rounded corners for brutalism
+        shape = RoundedCornerShape(24.dp), // More rounded as requested
         border = BorderStroke(2.dp, if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background),
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
-        interactionSource = interactionSource
+        interactionSource = interactionSource,
+        contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        Text(
-            text = text.uppercase(),
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text.uppercase(),
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
             )
-        )
+        }
     }
 }
 
@@ -91,7 +106,7 @@ fun BrutalistTextField(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, MaterialTheme.colorScheme.onBackground, RectangleShape)
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
                 .padding(16.dp)
         ) {
             if (value.isEmpty()) {
@@ -135,7 +150,7 @@ fun BrutalistInfoRow(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(1.dp, MaterialTheme.colorScheme.onBackground, RectangleShape)
+            .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -170,8 +185,10 @@ fun BrutalistBottomBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(2.dp, MaterialTheme.colorScheme.onBackground)
-            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.background, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
             .height(64.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -181,9 +198,11 @@ fun BrutalistBottomBar(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .background(if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Transparent)
                     .clickable { onItemClick(item.route) }
-                    .padding(8.dp),
+                    .padding(4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -200,10 +219,6 @@ fun BrutalistBottomBar(
                         color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
                     )
                 }
-            }
-            // Vertical Divider
-            if (item != items.last()) {
-                Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(MaterialTheme.colorScheme.onBackground))
             }
         }
     }
