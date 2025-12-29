@@ -16,8 +16,57 @@ class TokenDetailViewModel @Inject constructor(
     private val coinRepository: CoinRepository,
     private val transactionRepository: TransactionRepository,
     private val walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository,
-    private val tokenDao: com.antigravity.cryptowallet.data.db.TokenDao
+    private val tokenDao: com.antigravity.cryptowallet.data.db.TokenDao,
+    private val blockchainService: com.antigravity.cryptowallet.data.blockchain.BlockchainService,
+    private val networkRepository: com.antigravity.cryptowallet.data.blockchain.NetworkRepository
 ) : ViewModel() {
+
+    // ... (keep properties)
+    
+    var balance by mutableStateOf("0.0")
+        private set
+    
+    // ...
+
+    fun loadTokenData(symbol: String) {
+        currentSymbol = symbol
+        
+        viewModelScope.launch {
+            // Find token and network info to fetch balance
+            val tokenEntity = tokenDao.getTokenBySymbol(symbol)
+            val netId = tokenEntity?.chainId ?: when(symbol.uppercase()) {
+                "BNB" -> "bsc"
+                "MATIC", "POL" -> "matic"
+                "ETH" -> "eth"
+                else -> "eth"
+            }
+            val network = networkRepository.getNetwork(netId)
+            
+            // Trigger Transaction Refresh
+            val address = walletRepository.getAddress()
+            try {
+                 transactionRepository.refreshTransactions(address, network)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            
+            // Get Balance
+            try {
+                val rawBalance = if (tokenEntity?.contractAddress != null) {
+                     blockchainService.getTokenBalance(network.rpcUrl, tokenEntity.contractAddress, address)
+                } else {
+                     blockchainService.getBalance(network.rpcUrl, address)
+                }
+                
+                val decimals = tokenEntity?.decimals ?: 18
+                val ethBalance = java.math.BigDecimal(rawBalance).divide(java.math.BigDecimal.TEN.pow(decimals))
+                balance = String.format("%.4f %s", ethBalance, symbol)
+            } catch (e: Exception) {
+                balance = "Error"
+            }
+        }
+        
+        // ... (rest of filtering and price logic)
 
     val address: String
         get() = walletRepository.getAddress()

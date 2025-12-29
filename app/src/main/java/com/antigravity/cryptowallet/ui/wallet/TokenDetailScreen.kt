@@ -67,6 +67,23 @@ fun TokenDetailScreen(
         Text("Current Price", fontSize = 12.sp, color = Color.Gray)
         Text(price, fontSize = 48.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)
         
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Balance
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Balance: ",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = viewModel.balance,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+        
         Spacer(modifier = Modifier.height(32.dp))
 
         // Graph
