@@ -213,14 +213,14 @@ fun BrowserScreen(
                         )
                     }
                     
-                    groupedDapps.forEach { (category, items) ->
+                    groupedDapps.forEach { (category, dappList) ->
                         item {
                             Text(category, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 modifier = Modifier.padding(bottom = 24.dp)
                             ) {
-                                items(items) { dapp ->
+                                items(dappList) { dapp ->
                                     DAppCard(dapp) {
                                         url = dapp.url
                                         inputUrl = dapp.url
