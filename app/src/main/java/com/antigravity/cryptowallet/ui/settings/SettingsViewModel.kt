@@ -10,7 +10,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val themeRepository: com.antigravity.cryptowallet.data.repository.ThemeRepository
+    private val themeRepository: com.antigravity.cryptowallet.data.repository.ThemeRepository,
+    private val walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository
 ) : ViewModel() {
     
     val currentTheme = themeRepository.currentTheme
@@ -18,4 +19,6 @@ class SettingsViewModel @Inject constructor(
     fun setTheme(theme: ThemeType) {
         themeRepository.setTheme(theme)
     }
+
+    fun hasMnemonic(): Boolean = walletRepository.hasMnemonic()
 }

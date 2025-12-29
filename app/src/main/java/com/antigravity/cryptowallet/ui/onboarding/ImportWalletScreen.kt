@@ -30,6 +30,10 @@ class ImportWalletViewModel @Inject constructor(
     fun importWallet(phrase: String): Boolean {
         return walletRepository.importWallet(phrase)
     }
+
+    fun importPrivateKey(privateKey: String): Boolean {
+        return walletRepository.importPrivateKey(privateKey)
+    }
 }
 
 @Composable
@@ -37,9 +41,9 @@ fun ImportWalletScreen(
     onWalletImported: () -> Unit,
     viewModel: ImportWalletViewModel = hiltViewModel()
 ) {
-    var phrase by remember { mutableStateOf("") }
+    var importType by remember { mutableStateOf(0) } // 0: Phrase, 1: Private Key
+    var input by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -49,10 +53,45 @@ fun ImportWalletScreen(
     ) {
         BrutalistHeader("Import Wallet")
         
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Brutalist Tab Selector
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .padding(bottom = 16.dp)
+        ) {
+            listOf("Seed Phrase", "Private Key").forEachIndexed { index, label ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(if (importType == index) com.antigravity.cryptowallet.ui.theme.BrutalBlack else BrutalWhite)
+                        .border(2.dp, com.antigravity.cryptowallet.ui.theme.BrutalBlack)
+                        .clickable { 
+                            importType = index
+                            input = ""
+                            error = null
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        color = if (importType == index) BrutalWhite else com.antigravity.cryptowallet.ui.theme.BrutalBlack,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         BrutalistTextField(
-            value = phrase,
-            onValueChange = { phrase = it },
-            placeholder = "Enter 12/24 word seed phrase...",
+            value = input,
+            onValueChange = { input = it },
+            placeholder = if (importType == 0) "Enter 12/24 word seed phrase..." else "Enter your private key (64 chars)...",
             singleLine = false,
             modifier = Modifier.height(150.dp)
         )
@@ -60,7 +99,8 @@ fun ImportWalletScreen(
         if (error != null) {
             Text(
                 text = error!!,
-                color = Color.Black, // Using Black for error as per B&W rule, maybe user all caps to stress it
+                color = Color.Red,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
@@ -70,10 +110,16 @@ fun ImportWalletScreen(
         BrutalistButton(
             text = "Import",
             onClick = {
-                if (viewModel.importWallet(phrase.trim())) {
+                val success = if (importType == 0) {
+                    viewModel.importWallet(input.trim())
+                } else {
+                    viewModel.importPrivateKey(input.trim())
+                }
+
+                if (success) {
                     onWalletImported()
                 } else {
-                    error = "INVALID SEED PHRASE"
+                    error = if (importType == 0) "INVALID SEED PHRASE" else "INVALID PRIVATE KEY"
                 }
             }
         )

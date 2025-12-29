@@ -7,7 +7,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SecurityViewModel @Inject constructor(
-    private val secureStorage: SecureStorage
+    private val secureStorage: SecureStorage,
+    private val walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository
 ) : ViewModel() {
 
     fun setPin(pin: String) {
@@ -25,5 +26,13 @@ class SecurityViewModel @Inject constructor(
 
     fun getMnemonic(): String {
         return secureStorage.getMnemonic() ?: ""
+    }
+
+    fun getPrivateKey(): String {
+        return walletRepository.getPrivateKey()
+    }
+
+    fun hasMnemonic(): Boolean {
+        return walletRepository.hasMnemonic()
     }
 }

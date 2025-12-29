@@ -29,8 +29,10 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 fun SettingsScreen(
     onSetupSecurity: () -> Unit,
     onViewSeedPhrase: () -> Unit,
+    onRevealPrivateKey: () -> Unit,
     onViewAppInfo: () -> Unit,
-    onWalletConnect: () -> Unit
+    onWalletConnect: () -> Unit,
+    viewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     Column(
         modifier = Modifier
@@ -49,11 +51,19 @@ fun SettingsScreen(
                     icon = Icons.Default.Lock,
                     onClick = onSetupSecurity
                 )
+                if (viewModel.hasMnemonic()) {
+                    SettingsItem(
+                        title = "Reveal Seed Phrase",
+                        subtitle = "Backup your 12-word phrase",
+                        icon = Icons.Default.VpnKey,
+                        onClick = onViewSeedPhrase
+                    )
+                }
                 SettingsItem(
-                    title = "Reveal Seed Phrase",
-                    subtitle = "Backup your wallet",
-                    icon = Icons.Default.VpnKey,
-                    onClick = onViewSeedPhrase
+                    title = "Reveal Private Key",
+                    subtitle = "Sensitive access key",
+                    icon = Icons.Default.Lock, // Maybe different icon if available
+                    onClick = onRevealPrivateKey
                 )
             }
 

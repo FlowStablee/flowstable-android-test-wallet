@@ -11,7 +11,22 @@ import com.antigravity.cryptowallet.ui.wallet.WalletScreen
 fun WalletApp(startDestination: String = "intro") {
     val navController = rememberNavController()
     
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController, 
+        startDestination = startDestination,
+        enterTransition = {
+            androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }) + androidx.compose.animation.fadeIn()
+        },
+        exitTransition = {
+            androidx.compose.animation.slideOutHorizontally(targetOffsetX = { -it }) + androidx.compose.animation.fadeOut()
+        },
+        popEnterTransition = {
+            androidx.compose.animation.slideInHorizontally(initialOffsetX = { -it }) + androidx.compose.animation.fadeIn()
+        },
+        popExitTransition = {
+            androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }) + androidx.compose.animation.fadeOut()
+        }
+    ) {
         composable("intro") {
             IntroScreen(
                 onCreateWallet = { navController.navigate("create_wallet") },
@@ -43,7 +58,8 @@ fun WalletApp(startDestination: String = "intro") {
                 onNavigateToTransfer = { navController.navigate("transfer") },
                 onNavigateToAppInfo = { navController.navigate("app_info") },
                 onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") },
-                onNavigateToWalletConnect = { navController.navigate("wallet_connect") }
+                onNavigateToWalletConnect = { navController.navigate("wallet_connect") },
+                onNavigateToRevealPrivateKey = { navController.navigate("reveal_private_key_verify") }
             )
         }
 
@@ -93,6 +109,28 @@ fun WalletApp(startDestination: String = "intro") {
             val viewModel: com.antigravity.cryptowallet.ui.security.SecurityViewModel = androidx.hilt.navigation.compose.hiltViewModel()
             com.antigravity.cryptowallet.ui.security.ShowSeedScreen(
                 mnemonic = viewModel.getMnemonic(),
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("reveal_private_key_verify") {
+            val viewModel: com.antigravity.cryptowallet.ui.security.SecurityViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.UNLOCK,
+                onUnlock = {
+                    navController.navigate("reveal_private_key") {
+                        popUpTo("reveal_private_key_verify") { inclusive = true }
+                    }
+                },
+                checkPin = { viewModel.checkPin(it) },
+                biometricEnabled = viewModel.isBiometricEnabled()
+            )
+        }
+
+        composable("reveal_private_key") {
+            val viewModel: com.antigravity.cryptowallet.ui.security.SecurityViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            com.antigravity.cryptowallet.ui.security.ShowPrivateKeyScreen(
+                privateKey = viewModel.getPrivateKey(),
                 onBack = { navController.popBackStack() }
             )
         }

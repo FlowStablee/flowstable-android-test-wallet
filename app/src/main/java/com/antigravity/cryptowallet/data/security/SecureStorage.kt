@@ -50,10 +50,22 @@ class SecureStorage @Inject constructor(
         return encryptedPrefs.getBoolean(KEY_BIOMETRIC_ENABLED, false)
     }
 
+    fun savePrivateKey(privateKey: String) {
+        encryptedPrefs.edit()
+            .putString(KEY_PRIVATE_KEY, privateKey)
+            .putBoolean(KEY_WALLET_CREATED, true)
+            .apply()
+    }
+
+    fun getPrivateKey(): String? {
+        return encryptedPrefs.getString(KEY_PRIVATE_KEY, null)
+    }
+
     companion object {
         private const val KEY_MNEMONIC = "wallet_mnemonic"
         private const val KEY_WALLET_CREATED = "wallet_created"
         private const val KEY_PIN = "wallet_pin"
         private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
+        private const val KEY_PRIVATE_KEY = "wallet_private_key"
     }
 }

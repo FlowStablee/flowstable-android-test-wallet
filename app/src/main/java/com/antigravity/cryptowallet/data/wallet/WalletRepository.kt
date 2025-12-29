@@ -33,21 +33,42 @@ class WalletRepository @Inject constructor(
     fun importWallet(mnemonic: String): Boolean {
         if (!MnemonicUtils.validateMnemonic(mnemonic)) return false
         secureStorage.saveMnemonic(mnemonic)
-        loadWallet(mnemonic)
+        loadWallet(mnemonic = mnemonic)
         return true
     }
 
-    fun loadWallet(mnemonic: String? = null) {
-        val seedMnemonic = mnemonic ?: secureStorage.getMnemonic() ?: return
-        
-        // Derive Private Key (BIP-44: m/44'/60'/0'/0/0)
-        val seed = MnemonicUtils.generateSeed(seedMnemonic, null)
-        val masterKeyPair = Bip32ECKeyPair.generateKeyPair(seed)
-        val path = intArrayOf(44 or Bip32ECKeyPair.HARDENED_BIT, 60 or Bip32ECKeyPair.HARDENED_BIT, 0 or Bip32ECKeyPair.HARDENED_BIT, 0, 0)
-        val derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeyPair, path)
-        
-        activeCredentials = Credentials.create(derivedKeyPair)
+    fun importPrivateKey(privateKey: String): Boolean {
+        return try {
+            val cleanKey = if (privateKey.startsWith("0x")) privateKey.substring(2) else privateKey
+            if (cleanKey.length != 64) return false
+            secureStorage.savePrivateKey(cleanKey)
+            loadWallet(privateKey = cleanKey)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
+
+    fun loadWallet(mnemonic: String? = null, privateKey: String? = null) {
+        val seedMnemonic = mnemonic ?: secureStorage.getMnemonic()
+        val storedPrivateKey = privateKey ?: secureStorage.getPrivateKey()
+
+        activeCredentials = when {
+            seedMnemonic != null -> {
+                val seed = MnemonicUtils.generateSeed(seedMnemonic, null)
+                val masterKeyPair = Bip32ECKeyPair.generateKeyPair(seed)
+                val path = intArrayOf(44 or Bip32ECKeyPair.HARDENED_BIT, 60 or Bip32ECKeyPair.HARDENED_BIT, 0 or Bip32ECKeyPair.HARDENED_BIT, 0, 0)
+                val derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeyPair, path)
+                Credentials.create(derivedKeyPair)
+            }
+            storedPrivateKey != null -> {
+                Credentials.create(storedPrivateKey)
+            }
+            else -> null
+        }
+    }
+
+    fun hasMnemonic(): Boolean = secureStorage.getMnemonic() != null
 
     fun getAddress(): String {
         return activeCredentials?.address ?: ""
