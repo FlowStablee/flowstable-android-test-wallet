@@ -24,8 +24,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.Image
@@ -467,13 +468,13 @@ fun WalletScreen(
             BrutalistButton(
                 text = "Send",
                 onClick = onNavigateToSend,
-                icon = androidx.compose.material.icons.Icons.Default.ArrowOutward,
+                icon = Icons.Default.ArrowOutward,
                 modifier = Modifier.weight(1f)
             )
             BrutalistButton(
                 text = "Receive",
                 onClick = { showReceiveDialog = true },
-                icon = androidx.compose.material.icons.Icons.Default.FileDownload,
+                icon = Icons.Default.FileDownload,
                 modifier = Modifier.weight(1f),
                 inverted = true
             )
