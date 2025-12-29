@@ -8,7 +8,7 @@ import org.json.JSONObject
 class Web3Bridge(
     private val webView: WebView,
     private val address: String,
-    private val chainId: Long = 1,
+    private val chainIdProvider: () -> Long,
     private val onActionRequest: (Web3Request) -> Unit
 ) {
     private val gson = Gson()
@@ -20,6 +20,7 @@ class Web3Bridge(
     )
 
     fun getInjectionJs(): String {
+        val chainId = chainIdProvider()
         return """
             (function() {
                 const address = '$address';
@@ -87,10 +88,10 @@ class Web3Bridge(
                     sendResponse(id, "[\"$address\"]")
                 }
                 "eth_chainId" -> {
-                    sendResponse(id, "\"0x${chainId.toString(16)}\"")
+                    sendResponse(id, "\"0x${chainIdProvider().toString(16)}\"")
                 }
                 "net_version" -> {
-                    sendResponse(id, "\"$chainId\"")
+                    sendResponse(id, "\"${chainIdProvider()}\"")
                 }
                 "eth_sendTransaction", "personal_sign", "eth_sign", "eth_signTypedData_v4" -> {
                     onActionRequest(Web3Request(id, method, params))

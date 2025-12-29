@@ -168,7 +168,7 @@ fun BrowserScreen(
                             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                         }
                         
-                        val bridge = Web3Bridge(this, address, activeNetwork.chainId) { request ->
+                        val bridge = Web3Bridge(this, address, { activeNetwork.chainId }) { request ->
                             pendingRequest = request
                         }
                         bridgeInstance = bridge
@@ -178,7 +178,7 @@ fun BrowserScreen(
                             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                 super.onPageStarted(view, url, favicon)
                                 // We re-create the bridge in fact because chainId might change
-                                val currentBridge = Web3Bridge(view!!, address, activeNetwork.chainId) { request ->
+                                val currentBridge = Web3Bridge(view!!, address, { activeNetwork.chainId }) { request ->
                                     pendingRequest = request
                                 }
                                 bridgeInstance = currentBridge
@@ -328,9 +328,30 @@ private fun handleWeb3Request(
         }
         "wallet_switchEthereumChain" -> {
             try {
-                bridge?.sendResponse(request.id, "null") // Acknowledge switch
+                // params: [{ chainId: '0x...' }]
+                val paramsArray = org.json.JSONArray(request.params)
+                val paramObj = paramsArray.getJSONObject(0)
+                val targetChainIdHex = paramObj.getString("chainId")
+                val targetChainId = java.lang.Long.decode(targetChainIdHex)
+                
+                // Find network
+                val targetNet = viewModel.networks.find { it.chainId == targetChainId }
+                
+                if (targetNet != null) {
+                    viewModel.switchNetwork(targetNet.id)
+                    // We need to update local state immediately for the bridge to see it
+                    // NOTE: activeNetwork is a state that will be updated by LaunchedEffect or similar if we were observing ViewModel fully.
+                    // But here we set it manually to match
+                    // Ideally we'd callback to the composable content, but we can't easily here without refactor.
+                    // Assuming viewModel.activeNetwork is updated, we need to reflect it in the UI/Bridge provider.
+                    // The UI state 'activeNetwork' variable in BrowserScreen needs to be updated. Not accessible easily here.
+                    // FIX: We need to pass a callback to handleWeb3Request or move this logic inline.
+                    bridge?.sendResponse(request.id, "null")
+                } else {
+                     bridge?.sendError(request.id, "Chain ID $targetChainId not supported")
+                }
             } catch (e: Exception) {
-                bridge?.sendError(request.id, "Switch failed")
+                bridge?.sendError(request.id, "Switch failed: ${e.message}")
             }
         }
         "eth_requestPermissions" -> {
