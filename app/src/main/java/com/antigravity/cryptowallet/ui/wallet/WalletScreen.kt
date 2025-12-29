@@ -185,8 +185,8 @@ fun WalletScreen(
             Dialog(onDismissRequest = { showAddTokenDialog = false }) {
                 Column(
                     modifier = Modifier
-                        .background(BrutalWhite)
-                        .border(2.dp, BrutalBlack)
+                        .background(MaterialTheme.colorScheme.background)
+                        .border(2.dp, MaterialTheme.colorScheme.onBackground)
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -224,8 +224,8 @@ fun WalletScreen(
             Dialog(onDismissRequest = { showReceiveDialog = false }) {
                 Column(
                     modifier = Modifier
-                        .background(BrutalWhite)
-                        .border(2.dp, BrutalBlack)
+                        .background(MaterialTheme.colorScheme.background)
+                        .border(2.dp, MaterialTheme.colorScheme.onBackground)
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
