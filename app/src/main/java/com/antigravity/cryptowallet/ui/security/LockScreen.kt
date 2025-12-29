@@ -58,27 +58,37 @@ fun LockScreen(
     }
 
     // Biometric Trigger
-    LaunchedEffect(Unit) {
-        if (mode == LockMode.UNLOCK && biometricEnabled) {
-             val fragmentActivity = context.findFragmentActivity()
-             if (fragmentActivity != null) {
-                 val executor = ContextCompat.getMainExecutor(context)
-                 val biometricPrompt = BiometricPrompt(fragmentActivity, executor,
+    fun showBiometricPrompt() {
+        if (!biometricEnabled) return
+        
+        val fragmentActivity = context.findFragmentActivity()
+        if (fragmentActivity != null) {
+            val biometricManager = BiometricManager.from(context)
+            if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS) {
+                val executor = ContextCompat.getMainExecutor(context)
+                val biometricPrompt = BiometricPrompt(fragmentActivity, executor,
                     object : BiometricPrompt.AuthenticationCallback() {
                         override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                             super.onAuthenticationSucceeded(result)
                             onUnlock()
                         }
                     })
-    
+
                 val promptInfo = BiometricPrompt.PromptInfo.Builder()
                     .setTitle("Unlock Wallet")
                     .setSubtitle("Use biometric credential")
                     .setNegativeButtonText("Use PIN")
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
                     .build()
-    
+
                 biometricPrompt.authenticate(promptInfo)
-             }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (mode == LockMode.UNLOCK && biometricEnabled) {
+            showBiometricPrompt()
         }
     }
 
@@ -148,7 +158,9 @@ fun LockScreen(
                                     error = null
                                     when (label) {
                                         "Back" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                                        "Bio" -> { /* Relaunch Bio if needed */ }
+                                        "Bio" -> { 
+                                            if (biometricEnabled) showBiometricPrompt()
+                                        }
                                         else -> {
                                             if (pin.length < 4) {
                                                 pin += label

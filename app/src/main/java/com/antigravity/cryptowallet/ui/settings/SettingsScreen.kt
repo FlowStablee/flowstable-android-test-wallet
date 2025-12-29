@@ -26,7 +26,7 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 @Composable
 fun SettingsScreen(
     onSetupSecurity: () -> Unit,
-    onViewSeedPhrase: () -> Unit = {} // To be implemented
+    onViewSeedPhrase: () -> Unit
 ) {
     Column(
         modifier = Modifier

@@ -22,4 +22,8 @@ class SecurityViewModel @Inject constructor(
     fun isBiometricEnabled(): Boolean {
         return secureStorage.isBiometricEnabled()
     }
+
+    fun getMnemonic(): String {
+        return secureStorage.getMnemonic() ?: ""
+    }
 }

@@ -38,7 +38,8 @@ fun WalletApp(startDestination: String = "intro") {
         }
         composable("home") {
             MainScreen(
-                onNavigateToSecuritySetup = { navController.navigate("security_setup") }
+                onNavigateToSecuritySetup = { navController.navigate("security_setup") },
+                onNavigateToRevealSeed = { navController.navigate("reveal_seed_verify") }
             )
         }
         
@@ -53,6 +54,28 @@ fun WalletApp(startDestination: String = "intro") {
                 },
                 checkPin = { viewModel.checkPin(it) },
                 biometricEnabled = viewModel.isBiometricEnabled()
+            )
+        }
+
+        composable("reveal_seed_verify") {
+            val viewModel = androidx.hilt.navigation.compose.hiltViewModel<com.antigravity.cryptowallet.ui.security.SecurityViewModel>()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.UNLOCK,
+                onUnlock = {
+                    navController.navigate("show_seed") {
+                        popUpTo("reveal_seed_verify") { inclusive = true }
+                    }
+                },
+                checkPin = { viewModel.checkPin(it) },
+                biometricEnabled = viewModel.isBiometricEnabled()
+            )
+        }
+
+        composable("show_seed") {
+            val viewModel = androidx.hilt.navigation.compose.hiltViewModel<com.antigravity.cryptowallet.ui.security.SecurityViewModel>()
+            com.antigravity.cryptowallet.ui.security.ShowSeedScreen(
+                mnemonic = viewModel.getMnemonic(),
+                onBack = { navController.popBackStack() }
             )
         }
 
