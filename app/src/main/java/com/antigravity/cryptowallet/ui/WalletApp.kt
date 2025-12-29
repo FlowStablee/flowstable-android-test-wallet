@@ -104,6 +104,21 @@ fun WalletApp(startDestination: String = "intro") {
                 onUnlock = {}, // Not used in setup
                 biometricEnabled = false
             )
+        }
+
+        composable("unlock") {
+            val viewModel = androidx.hilt.navigation.compose.hiltViewModel<com.antigravity.cryptowallet.ui.security.SecurityViewModel>()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.UNLOCK,
+                onPinSet = {},
+                onUnlock = {
+                    navController.navigate("home") {
+                        popUpTo("unlock") { inclusive = true }
+                    }
+                },
+                biometricEnabled = viewModel.isBiometricEnabled()
+            )
+        }
         composable(
             route = "transaction_success/{amount}/{symbol}/{recipient}",
             arguments = listOf(
