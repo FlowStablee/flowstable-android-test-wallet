@@ -26,10 +26,7 @@ import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
 @Composable
-fun SettingsScreen(
-    onSetupSecurity: () -> Unit,
-    onViewSeedPhrase: () -> Unit,
-fun SettingsScreen(
+
     onSetupSecurity: () -> Unit,
     onViewSeedPhrase: () -> Unit,
     onViewAppInfo: () -> Unit,
@@ -65,7 +62,7 @@ fun SettingsScreen(
                 SettingsItem(
                     title = "Wallet Connect",
                     subtitle = "Connect to dApps",
-                    icon = androidx.compose.material.icons.filled.QrCodeScanner,
+                    icon = Icons.Filled.QrCodeScanner,
                     onClick = onWalletConnect
                 )
                 SettingsItem(
