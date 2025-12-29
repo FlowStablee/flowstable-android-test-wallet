@@ -21,6 +21,9 @@ class TokenDetailViewModel @Inject constructor(
     var price by mutableStateOf("Loading...")
         private set
 
+    var contractAddress by mutableStateOf("")
+        private set
+
     var graphPoints by mutableStateOf<List<Double>>(emptyList())
         private set
 
@@ -40,11 +43,22 @@ class TokenDetailViewModel @Inject constructor(
             try {
                 // Fetch Info
                 val info = coinRepository.getCoinInfo(id)
-                description = info.description.en.take(300) + "..." // Truncate
+                // Filter out HTML tags from description if present
+                val rawDescription = info.description.en
+                description = rawDescription.replace(Regex("<.*?>"), "") 
+                    .take(300) + (if (rawDescription.length > 300) "..." else "")
+
+                // Extract Contract Address
+                // Prioritize finding one that matches the chain if possible, but for now just pick the first one
+                // or "Native" if none found (which is true for ETH/BNB mainnet coins usually)
+                 val rawAddress = info.platforms?.entries?.firstOrNull()?.value
+                 contractAddress = if (!rawAddress.isNullOrEmpty()) rawAddress else "Native Token"
+
 
                 // Fetch Chart
                 val chart = coinRepository.getMarketChart(id)
                 graphPoints = chart.prices.map { it[1] }
+
                 
                 // Fetch Price (use last point for now or specialized call)
                 val currentPrice = graphPoints.lastOrNull() ?: 0.0

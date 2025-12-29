@@ -10,7 +10,8 @@ data class CoinInfoResponse(
     val id: String,
     val symbol: String,
     val name: String,
-    val description: Description
+    val description: Description,
+    val platforms: Map<String, String>? = null
 )
 
 data class Description(

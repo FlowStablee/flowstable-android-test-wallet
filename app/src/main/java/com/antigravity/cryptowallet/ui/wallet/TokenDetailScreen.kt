@@ -36,6 +36,7 @@ fun TokenDetailScreen(
 
     val price = viewModel.price
     val description = viewModel.description
+    val contractAddress = viewModel.contractAddress
     val points = viewModel.graphPoints
     
     // Determine color based on trend
@@ -104,6 +105,37 @@ fun TokenDetailScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Contract Address
+        if (contractAddress.isNotEmpty()) {
+            Text("Contract Address", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(2.dp, MaterialTheme.colorScheme.onBackground)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = contractAddress,
+                    modifier = Modifier.weight(1f),
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Icon(
+                    imageVector = Icons.Default.ContentCopy, 
+                    contentDescription = "Copy",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Description
         Text("About $symbol", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
