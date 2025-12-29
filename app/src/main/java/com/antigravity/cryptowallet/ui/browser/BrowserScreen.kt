@@ -34,6 +34,10 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.antigravity.cryptowallet.data.wallet.WalletRepository
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
+import com.antigravity.cryptowallet.ui.components.BrutalistHeader
 
 @Composable
 fun BrowserScreen(

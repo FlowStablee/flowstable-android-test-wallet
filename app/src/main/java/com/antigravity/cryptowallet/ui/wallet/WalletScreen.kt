@@ -48,22 +48,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.window.Dialog
-import com.antigravity.cryptowallet.utils.QrCodeGenerator
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Settings
 
 @HiltViewModel
 class WalletViewModel @Inject constructor(
