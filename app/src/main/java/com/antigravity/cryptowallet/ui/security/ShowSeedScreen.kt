@@ -92,4 +92,3 @@ fun SeedWordItem(index: Int, word: String) {
 }
 
 // Extension to Box for clickable without ripples (keeping brutalist feel)
-import androidx.compose.foundation.clickable
