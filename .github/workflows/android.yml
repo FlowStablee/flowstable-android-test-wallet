@@ -64,17 +64,18 @@ jobs:
 
     - name: Send APK to Telegram
       if: success()
-      uses: appleboy/telegram-action@v0.1.1
+      uses: appleboy/telegram-action@v1.0.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
         document: FlowStable-Wallet-Latest.apk
+        format: markdown
         message: |
-          ✅ New Android Build Ready!
+          ✅ **New Android Build Ready!**
 
-          App: FlowStable Wallet
-          Branch: ${{ github.ref_name }}
-          Commit: ${{ github.sha }}
+          **App:** FlowStable Wallet
+          **Branch:** `${{ github.ref_name }}`
+          **Commit:** `${{ github.sha }}`
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
