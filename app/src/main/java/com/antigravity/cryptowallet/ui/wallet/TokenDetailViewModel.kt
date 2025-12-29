@@ -161,7 +161,7 @@ class TokenDetailViewModel @Inject constructor(
                     } catch (e2: Exception) {
                          // Fallback to Simple Price if Chart fails
                         try {
-                            val priceMap = coinRepository.api.getSimplePrice(id)
+                            val priceMap = coinRepository.getSimplePrice(id)
                             val simplePrice = priceMap[id]?.get("usd") ?: 0.0
                             price = if (simplePrice > 0) String.format("$%.2f", simplePrice) else "N/A"
                         } catch (e3: Exception) {

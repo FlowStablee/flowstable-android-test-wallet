@@ -18,6 +18,10 @@ class CoinRepository @Inject constructor(
         return api.getCoinOHLC(id, days = days)
     }
 
+    suspend fun getSimplePrice(id: String): Map<String, Map<String, Double>> {
+        return api.getSimplePrice(id)
+    }
+
     suspend fun getCoinInfo(id: String): CoinInfoResponse {
         return api.getCoinInfo(id)
     }
