@@ -1,6 +1,5 @@
 package com.antigravity.cryptowallet.ui.theme
 
-
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -16,7 +15,6 @@ val Black = Color(0xFF000000)
 val White = Color(0xFFFFFFFF)
 val BrutalBlack = Black
 val BrutalWhite = White
-
 
 enum class ThemeType {
     DEFAULT, MIDNIGHT, FOREST, CRIMSON, SLATE, VIOLET
@@ -46,8 +44,36 @@ private val VioletScheme = lightColorScheme(
     primary = Color(0xFF4B0082), onPrimary = White, background = White, onBackground = Color(0xFF4B0082), surface = White, onSurface = Color(0xFF4B0082)
 )
 
-// Dynamic provider for "Brutal" colors based on MaterialTheme (to be used in Composable context)
-// Note: We can't change the global 'val BrutalBlack' easily, but we can recommend using MaterialTheme.colorScheme.primary
+val BrutalistTypography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Bold,
+        fontSize = 57.sp,
+        lineHeight = 64.sp,
+        letterSpacing = (-0.25).sp
+    ),
+    displayMedium = TextStyle(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Bold,
+        fontSize = 45.sp,
+        lineHeight = 52.sp,
+        letterSpacing = 0.sp
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
+    labelLarge = TextStyle(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    )
+)
 
 @Composable
 fun CryptoWalletTheme(
