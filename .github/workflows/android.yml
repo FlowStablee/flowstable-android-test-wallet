@@ -92,6 +92,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Direct APK Link
+      run: |
+        echo "### ✅ Build Successful" >> $GITHUB_STEP_SUMMARY
+        echo "Download the raw APK directly here:" >> $GITHUB_STEP_SUMMARY
+        echo "[🚀 Download FlowStable-Wallet-Latest.apk](https://github.com/${{ github.repository }}/releases/download/latest/FlowStable-Wallet-Latest.apk)" >> $GITHUB_STEP_SUMMARY
+
     - name: Final build report
       if: always()
       uses: appleboy/telegram-action@v0.1.1
