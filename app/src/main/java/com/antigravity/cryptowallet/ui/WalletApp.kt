@@ -41,7 +41,8 @@ fun WalletApp(startDestination: String = "intro") {
                 onNavigateToSecuritySetup = { navController.navigate("security_setup") },
                 onNavigateToRevealSeed = { navController.navigate("reveal_seed_verify") },
                 onNavigateToTransfer = { navController.navigate("transfer") },
-                onNavigateToAppInfo = { navController.navigate("app_info") }
+                onNavigateToAppInfo = { navController.navigate("app_info") },
+                onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") }
             )
         }
 
@@ -143,6 +144,17 @@ fun WalletApp(startDestination: String = "intro") {
                         popUpTo("home") { inclusive = true }
                     }
                 }
+            )
+        composable(
+            route = "token_detail/{symbol}",
+            arguments = listOf(
+                androidx.navigation.navArgument("symbol") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
+            com.antigravity.cryptowallet.ui.wallet.TokenDetailScreen(
+                symbol = symbol,
+                onBack = { navController.popBackStack() }
             )
         }
     }

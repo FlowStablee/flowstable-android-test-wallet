@@ -30,7 +30,8 @@ fun MainScreen(
     onNavigateToSecuritySetup: () -> Unit,
     onNavigateToRevealSeed: () -> Unit,
     onNavigateToTransfer: () -> Unit,
-    onNavigateToAppInfo: () -> Unit
+    onNavigateToAppInfo: () -> Unit,
+    onNavigateToTokenDetail: (String) -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -68,7 +69,8 @@ fun MainScreen(
             composable("wallet") {
                 WalletScreen(
                     onSetupSecurity = onNavigateToSecuritySetup,
-                    onNavigateToSend = onNavigateToTransfer
+                    onNavigateToSend = onNavigateToTransfer,
+                    onNavigateToTokenDetail = onNavigateToTokenDetail
                 )
             }
             composable("browser") {
