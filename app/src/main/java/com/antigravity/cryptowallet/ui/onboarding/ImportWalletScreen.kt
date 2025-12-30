@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.antigravity.cryptowallet.data.wallet.WalletRepository
 import com.antigravity.cryptowallet.ui.components.BrutalistButton
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +37,7 @@ class ImportWalletViewModel @Inject constructor(
         private set
 
     fun importWallet(phrase: String, onResult: (Boolean) -> Unit) {
-        androidx.lifecycle.viewModelScope.launch {
+        viewModelScope.launch {
             isLoading = true
             val success = walletRepository.importWallet(phrase)
             isLoading = false
@@ -45,7 +46,7 @@ class ImportWalletViewModel @Inject constructor(
     }
 
     fun importPrivateKey(privateKey: String, onResult: (Boolean) -> Unit) {
-        androidx.lifecycle.viewModelScope.launch {
+        viewModelScope.launch {
             isLoading = true
             val success = walletRepository.importPrivateKey(privateKey)
             isLoading = false
