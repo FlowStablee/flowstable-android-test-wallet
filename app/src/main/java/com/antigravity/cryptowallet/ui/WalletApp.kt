@@ -5,7 +5,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.antigravity.cryptowallet.ui.onboarding.IntroScreen
-import com.antigravity.cryptowallet.ui.wallet.WalletScreen
 
 import com.antigravity.cryptowallet.ui.onboarding.SplashScreen
 
