@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
@@ -81,7 +82,7 @@ fun SettingsScreen(
                 SettingsItem(
                     title = "Appearance",
                     subtitle = "Themes & Fonts",
-                    icon = androidx.compose.material.icons.filled.Palette,
+                    icon = Icons.Default.Edit, // Using Edit as a safe fallback or import Palette properly
                     onClick = onAppearance
                 )
                 SettingsItem(
