@@ -16,12 +16,7 @@ jobs:
     - name: Checkout source
       uses: actions/checkout@v4
 
-    - name: Report – Checkout completed
-      uses: appleboy/telegram-action@v0.1.1
-      with:
-        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        to: ${{ secrets.TELEGRAM_CHAT_ID }}
-        message: "Step 1/7: Source checkout completed"
+
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -29,35 +24,19 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Report – JDK ready
-      uses: appleboy/telegram-action@v0.1.1
-      with:
-        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        to: ${{ secrets.TELEGRAM_CHAT_ID }}
-        message: "Step 2/7: JDK 17 configured"
+
 
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: '8.4'
 
-    - name: Report – Gradle ready
-      uses: appleboy/telegram-action@v0.1.1
-      with:
-        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        to: ${{ secrets.TELEGRAM_CHAT_ID }}
-        message: "Step 3/7: Gradle environment ready"
+
 
     - name: Build Debug APK
       run: gradle clean assembleDebug --no-daemon --info --stacktrace
 
-    - name: Report – Build completed
-      if: success()
-      uses: appleboy/telegram-action@v0.1.1
-      with:
-        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        to: ${{ secrets.TELEGRAM_CHAT_ID }}
-        message: "Step 4/7: APK build successful"
+
 
     - name: Prepare APK
       run: cp app/build/outputs/apk/debug/app-debug.apk FlowStable-Wallet-Latest.apk
