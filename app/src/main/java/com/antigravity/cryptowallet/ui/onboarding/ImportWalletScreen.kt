@@ -1,27 +1,30 @@
 package com.antigravity.cryptowallet.ui.onboarding
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.TextSnippet
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.antigravity.cryptowallet.data.wallet.WalletRepository
 import com.antigravity.cryptowallet.ui.components.BrutalistButton
-import com.antigravity.cryptowallet.ui.components.BrutalistHeader
-import com.antigravity.cryptowallet.ui.components.BrutalistTextField
-import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -49,80 +52,185 @@ fun ImportWalletScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BrutalWhite)
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp)
     ) {
-        BrutalistHeader("Import Wallet")
+        Spacer(modifier = Modifier.height(32.dp))
         
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Brutalist Tab Selector
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .border(2.dp, com.antigravity.cryptowallet.ui.theme.BrutalBlack, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-        ) {
-            listOf("Seed Phrase", "Private Key").forEachIndexed { index, label ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .background(if (importType == index) com.antigravity.cryptowallet.ui.theme.BrutalBlack else BrutalWhite)
-                        .clickable { 
-                            importType = index
-                            input = ""
-                            error = null
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        color = if (importType == index) BrutalWhite else com.antigravity.cryptowallet.ui.theme.BrutalBlack,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        BrutalistTextField(
-            value = input,
-            onValueChange = { input = it },
-            placeholder = if (importType == 0) "Enter 12/24 word seed phrase..." else "Enter your private key (64 chars)...",
-            singleLine = false,
-            modifier = Modifier.height(150.dp)
+        // Header
+        Text(
+            text = "Import Wallet",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "Restore your existing wallet using a seed phrase or private key",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray,
+            modifier = Modifier.padding(top = 8.dp)
         )
         
-        if (error != null) {
-            Text(
-                text = error!!,
-                color = Color.Red,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp)
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Import Type Selector Cards
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            ImportTypeCard(
+                label = "Seed Phrase",
+                icon = Icons.Default.TextSnippet,
+                isSelected = importType == 0,
+                onClick = { importType = 0; input = ""; error = null },
+                modifier = Modifier.weight(1f)
+            )
+            ImportTypeCard(
+                label = "Private Key",
+                icon = Icons.Default.Key,
+                isSelected = importType == 1,
+                onClick = { importType = 1; input = ""; error = null },
+                modifier = Modifier.weight(1f)
             )
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Input Field
+        OutlinedTextField(
+            value = input,
+            onValueChange = { input = it; error = null },
+            label = { Text(if (importType == 0) "Enter Seed Phrase" else "Enter Private Key") },
+            placeholder = { 
+                Text(
+                    if (importType == 0) "word1 word2 word3 ... (12 or 24 words)" 
+                    else "0x... or raw 64-character hex"
+                ) 
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp),
+            singleLine = false,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                cursorColor = MaterialTheme.colorScheme.primary
+            )
+        )
+        
+        if (error != null) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = error!!,
+                    color = Color(0xFFC62828),
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
+        
+        // Security Note
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "🔒 Your seed phrase or private key never leaves your device and is stored securely using encrypted storage.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                modifier = Modifier.padding(16.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
 
         BrutalistButton(
-            text = "Import",
+            text = "Import Wallet",
             onClick = {
+                val trimmedInput = input.trim()
+                if (trimmedInput.isEmpty()) {
+                    error = "Please enter your ${if (importType == 0) "seed phrase" else "private key"}"
+                    return@BrutalistButton
+                }
+                
                 val success = if (importType == 0) {
-                    viewModel.importWallet(input.trim())
+                    viewModel.importWallet(trimmedInput)
                 } else {
-                    viewModel.importPrivateKey(input.trim())
+                    viewModel.importPrivateKey(trimmedInput)
                 }
 
                 if (success) {
                     onWalletImported()
                 } else {
-                    error = if (importType == 0) "INVALID SEED PHRASE" else "INVALID PRIVATE KEY"
+                    error = if (importType == 0) 
+                        "Invalid seed phrase. Please check your words and try again." 
+                    else 
+                        "Invalid private key format. Please verify and try again."
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         )
+    }
+}
+
+@Composable
+fun ImportTypeCard(
+    label: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+        label = "bg"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+        label = "content"
+    )
+    
+    Card(
+        modifier = modifier
+            .height(100.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(16.dp),
+        border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray) else null
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = label,
+                fontWeight = FontWeight.Bold,
+                color = contentColor,
+                fontSize = 13.sp
+            )
+        }
     }
 }

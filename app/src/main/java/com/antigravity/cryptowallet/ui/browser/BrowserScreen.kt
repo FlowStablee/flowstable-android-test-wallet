@@ -3,9 +3,7 @@ package com.antigravity.cryptowallet.ui.browser
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,14 +16,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,8 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -45,8 +36,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.antigravity.cryptowallet.ui.components.BrutalistButton
-import com.antigravity.cryptowallet.ui.theme.BrutalBlack
-import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
 data class DApp(
     val name: String,
@@ -69,7 +58,6 @@ fun BrowserScreen(
     val address = walletRepository.getAddress()
     var activeNetwork by remember { mutableStateOf(viewModel.activeNetwork) }
     
-    // Web3 Confirmation State
     var pendingRequest by remember { mutableStateOf<Web3Bridge.Web3Request?>(null) }
     var bridgeInstance by remember { mutableStateOf<Web3Bridge?>(null) }
     var showNetworkSelector by remember { mutableStateOf(false) }
@@ -112,7 +100,8 @@ fun BrowserScreen(
                 activeNetworkName = activeNetwork.name,
                 onNetworkClick = { showNetworkSelector = true }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -162,7 +151,6 @@ fun BrowserScreen(
         }
     }
 
-    // Web3 Request Dialog
     pendingRequest?.let { request ->
         Web3RequestDialog(
             request = request,
@@ -197,25 +185,23 @@ fun BrowserTopBar(
     activeNetworkName: String,
     onNetworkClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .shadow(elevation = 4.dp)
-            .padding(8.dp)
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (!isHome) {
-                IconButton(onClick = onHome, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = onHome, modifier = Modifier.size(40.dp)) {
                     Icon(Icons.Default.Home, contentDescription = "Home", tint = MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
             }
 
-            // Search Bar
             Row(
                 modifier = Modifier
                     .weight(1f)
@@ -227,7 +213,7 @@ fun BrowserTopBar(
                 Icon(
                     Icons.Default.Search, 
                     contentDescription = null, 
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -244,7 +230,11 @@ fun BrowserTopBar(
                     modifier = Modifier.weight(1f),
                     decorationBox = { innerTextField ->
                         if (currentUrl.isEmpty()) {
-                            Text("Search DApps or Enter URL", color = Color.Gray, fontSize = 14.sp)
+                            Text(
+                                "Search DApps or Enter URL", 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 14.sp
+                            )
                         }
                         innerTextField()
                     },
@@ -255,14 +245,13 @@ fun BrowserTopBar(
                          onClick = { onValueChange("") },
                          modifier = Modifier.size(20.dp)
                      ) {
-                         Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                         Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                      }
                 }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Network Badge
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.primaryContainer,
@@ -275,7 +264,7 @@ fun BrowserTopBar(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(8.dp).background(Color.Green, CircleShape))
+                    Box(modifier = Modifier.size(8.dp).background(Color(0xFF4CAF50), CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         activeNetworkName.take(3).uppercase(), 
@@ -301,14 +290,15 @@ fun BrowserHome(dapps: List<DApp>, onDappClick: (DApp) -> Unit) {
                 "Favorites",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
 
         item {
              LazyVerticalGrid(
-                columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(4),
-                modifier = Modifier.height(200.dp), // Height estimate
+                columns = GridCells.Fixed(4),
+                modifier = Modifier.height(200.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -324,6 +314,7 @@ fun BrowserHome(dapps: List<DApp>, onDappClick: (DApp) -> Unit) {
                 "Explore",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
@@ -398,7 +389,7 @@ fun DAppListItem(dapp: DApp, onClick: () -> Unit) {
             Text(
                 dapp.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
         }
@@ -431,13 +422,12 @@ fun BrowserWebView(
                     val bridgeRef = this.tag as? Web3Bridge ?: return@Web3Bridge
                     onPendingRequest(request, bridgeRef)
                 }
-                this.tag = bridge // Store bridge in tag to retrieve later if needed
+                this.tag = bridge
                 addJavascriptInterface(bridge, "androidWallet")
                 
                 webViewClient = object : WebViewClient() {
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                          super.onPageStarted(view, url, favicon)
-                         // Re-inject bridge if needed
                          val currentBridge = (view?.tag as? Web3Bridge) ?: bridge
                          view?.evaluateJavascript(currentBridge.getInjectionJs(), null)
                     }
@@ -454,9 +444,7 @@ fun BrowserWebView(
                 onWebViewCreated(this)
             }
         },
-        update = {
-            // Update logic if needed
-        },
+        update = {},
         modifier = Modifier.fillMaxSize()
     )
 }
@@ -479,6 +467,7 @@ fun NetworkSelector(
                     "Select Network",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 LazyColumn {
@@ -493,13 +482,16 @@ fun NetworkSelector(
                         ) {
                             RadioButton(
                                 selected = net.id == activeNetworkId,
-                                onClick = { onSelect(net) }
+                                onClick = { onSelect(net) },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colorScheme.primary
+                                )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(net.name, style = MaterialTheme.typography.bodyLarge)
+                            Text(net.name, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
                         }
                         if (index < networks.size - 1) {
-                            Divider(color = Color.LightGray.copy(alpha = 0.5f))
+                            Divider(color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
                 }
@@ -523,15 +515,16 @@ fun Web3RequestDialog(
 ) {
     AlertDialog(
         onDismissRequest = onReject,
-        title = { Text("Sign Request") },
+        title = { Text("Sign Request", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column {
-                Text("Method: ${request.method}")
+                Text("Method: ${request.method}", color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     "Params: ${request.params.take(100)}...",
                     style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
@@ -540,7 +533,8 @@ fun Web3RequestDialog(
         },
         dismissButton = {
             TextButton(onClick = onReject) { Text("Reject") }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }
 
@@ -555,11 +549,9 @@ private fun handleWeb3Request(
     when (request.method) {
         "personal_sign" -> {
             try {
-                // params: [message, address]
                 val paramsArray = org.json.JSONArray(request.params)
                 val message = paramsArray.getString(0)
                 
-                // Sign message
                 val data = if (message.startsWith("0x")) org.web3j.utils.Numeric.hexStringToByteArray(message) else message.toByteArray()
                 val signatureData = org.web3j.crypto.Sign.signPrefixedMessage(data, credentials.ecKeyPair)
                 
@@ -575,7 +567,6 @@ private fun handleWeb3Request(
         }
         "wallet_switchEthereumChain" -> {
             try {
-                // params: [{ chainId: '0x...' }]
                 val paramsArray = org.json.JSONArray(request.params)
                 val paramObj = paramsArray.getJSONObject(0)
                 val targetChainIdHex = paramObj.getString("chainId")
@@ -593,13 +584,10 @@ private fun handleWeb3Request(
             }
         }
         "eth_requestPermissions" -> {
-             // Just accept for now
              bridge?.sendResponse(request.id, "[{\"parentCapability\": \"eth_accounts\"}]")
         }
         "eth_sendTransaction" -> {
-            // For now, we mock success for the browser to keep flow going, 
-            // In a real one we'd use BlockchainService to send raw transaction.
-            bridge?.sendResponse(request.id, "\"0x${"f".repeat(64)}\"") // Mock tx hash
+            bridge?.sendResponse(request.id, "\"0x${"f".repeat(64)}\"")
         }
     }
 }

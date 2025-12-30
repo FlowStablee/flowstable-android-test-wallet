@@ -31,6 +31,7 @@ fun MainScreen(
     onNavigateToRevealSeed: () -> Unit,
     onNavigateToTransfer: () -> Unit,
     onNavigateToAppInfo: () -> Unit,
+    onNavigateToAppearance: () -> Unit,
     onNavigateToTokenDetail: (String) -> Unit,
     onNavigateToWalletConnect: () -> Unit,
     onNavigateToRevealPrivateKey: () -> Unit
@@ -87,7 +88,7 @@ fun MainScreen(
                     onViewSeedPhrase = onNavigateToRevealSeed,
                     onRevealPrivateKey = onNavigateToRevealPrivateKey,
                     onViewAppInfo = onNavigateToAppInfo,
-                    onAppearance = { navController.navigate("appearance") },
+                    onAppearance = onNavigateToAppearance,
                     onWalletConnect = onNavigateToWalletConnect
                 )
             }

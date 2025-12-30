@@ -57,6 +57,7 @@ fun WalletApp(startDestination: String = "intro") {
                 onNavigateToRevealSeed = { navController.navigate("reveal_seed_verify") },
                 onNavigateToTransfer = { navController.navigate("transfer") },
                 onNavigateToAppInfo = { navController.navigate("app_info") },
+                onNavigateToAppearance = { navController.navigate("appearance") },
                 onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") },
                 onNavigateToWalletConnect = { navController.navigate("wallet_connect") },
                 onNavigateToRevealPrivateKey = { navController.navigate("reveal_private_key_verify") }
