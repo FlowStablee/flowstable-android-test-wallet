@@ -129,18 +129,13 @@ class WalletViewModel @Inject constructor(
     }
     
     private fun updateDisplayedAssets() {
-        val filtered = allAssets.filter { 
-             it.networkName.equals(activeNetwork.name, ignoreCase = true) 
-        }
+        // Show all assets, not just filtered by network
+        // This ensures users can see their whole portfolio
+        assets = allAssets
         
-        if (filtered.isEmpty()) {
-            // assets = emptyList() // or keep empty
-        } else {
-             assets = filtered
-             
-             val total = assets.sumByDouble { it.rawBalance * it.price }
-             totalBalanceUsd = String.format("$%.2f", total)
-        }
+        // Calculate total from ALL assets
+        val total = allAssets.sumOf { it.rawBalance * it.price }
+        totalBalanceUsd = String.format("$%.2f", total)
     }
 
     // Mock generation removed
@@ -157,7 +152,7 @@ fun WalletScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BrutalWhite)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         val clipboardManager = LocalClipboardManager.current
@@ -169,8 +164,8 @@ fun WalletScreen(
             Dialog(onDismissRequest = { showNetworkSelector = false }) {
                 Column(
                     modifier = Modifier
-                        .background(BrutalWhite, RoundedCornerShape(24.dp))
-                        .border(2.dp, BrutalBlack, RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+                        .border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(24.dp))
                         .clip(RoundedCornerShape(24.dp))
                         .padding(24.dp)
                 ) {
@@ -186,14 +181,14 @@ fun WalletScreen(
                                         viewModel.switchNetwork(net.id)
                                         showNetworkSelector = false
                                     }
-                                    .background(if (viewModel.activeNetwork.id == net.id) BrutalBlack else BrutalWhite, RoundedCornerShape(12.dp))
+                                    .background(if (viewModel.activeNetwork.id == net.id) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
                                     .clip(RoundedCornerShape(12.dp))
                                     .padding(12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(net.name, color = if (viewModel.activeNetwork.id == net.id) BrutalWhite else BrutalBlack, fontWeight = FontWeight.Bold)
+                                Text(net.name, color = if (viewModel.activeNetwork.id == net.id) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                                 if (viewModel.activeNetwork.id == net.id) {
-                                    Text("ACTIVE", color = BrutalWhite, fontSize = 10.sp, fontWeight = FontWeight.Black)
+                                    Text("ACTIVE", color = MaterialTheme.colorScheme.onPrimary, fontSize = 10.sp, fontWeight = FontWeight.Black)
                                 }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -287,7 +282,7 @@ fun WalletScreen(
                     Text(
                         text = "(Tap address to copy)",
                         fontSize = 12.sp,
-                        color = BrutalBlack
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -316,7 +311,7 @@ fun WalletScreen(
                         viewModel.activeNetwork.name.uppercase(),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Black,
-                        color = BrutalBlack
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -327,7 +322,7 @@ fun WalletScreen(
                     androidx.compose.material3.Icon(
                         imageVector = Icons.Filled.Refresh,
                         contentDescription = "Refresh",
-                        tint = BrutalBlack,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -337,7 +332,7 @@ fun WalletScreen(
                     androidx.compose.material3.Icon(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Security Settings",
-                        tint = BrutalBlack,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -348,13 +343,13 @@ fun WalletScreen(
         
         Text(
             text = "TOTAL BALANCE",
-            color = BrutalBlack,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold
         )
         Text(
             text = viewModel.totalBalanceUsd,
-            color = BrutalBlack,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 42.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = (-1).sp

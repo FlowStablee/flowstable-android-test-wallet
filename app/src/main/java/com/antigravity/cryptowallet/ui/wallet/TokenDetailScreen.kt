@@ -1,11 +1,13 @@
 package com.antigravity.cryptowallet.ui.wallet
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
@@ -15,20 +17,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.window.Dialog
+import com.antigravity.cryptowallet.ui.components.BrutalistButton
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import com.antigravity.cryptowallet.ui.wallet.TokenDetailViewModel
+import com.antigravity.cryptowallet.utils.QrCodeGenerator
 
 @Composable
 fun TokenDetailScreen(
@@ -37,6 +40,9 @@ fun TokenDetailScreen(
     onNavigateToSend: () -> Unit,
     viewModel: TokenDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
+    var showReceiveDialog by remember { mutableStateOf(false) }
+    val clipboardManager = LocalClipboardManager.current
+    
     LaunchedEffect(symbol) {
         viewModel.loadTokenData(symbol)
     }
@@ -46,18 +52,88 @@ fun TokenDetailScreen(
     val contractAddress = viewModel.contractAddress
     val points = viewModel.graphPoints
     val transactions = viewModel.transactions
+    val walletAddress = viewModel.walletAddress
     
-    // Determine color based on trend
     val isPositive = if (points.size > 1) points.last() >= points.first() else true
     val trendColor = if (isPositive) Color(0xFF00C853) else Color.Red
-    
-    // ... UI Structure ...
+
+    // Receive Dialog
+    if (showReceiveDialog) {
+        Dialog(onDismissRequest = { showReceiveDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Receive $symbol",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    if (walletAddress.length > 10) {
+                        val qrBitmap = remember(walletAddress) {
+                            QrCodeGenerator.generateQrCode(walletAddress)
+                        }
+                        Image(
+                            bitmap = qrBitmap.asImageBitmap(),
+                            contentDescription = "Wallet Address QR Code",
+                            modifier = Modifier.size(180.dp)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = walletAddress,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                clipboardManager.setText(AnnotatedString(walletAddress))
+                            }
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(12.dp)
+                    )
+                    
+                    Text(
+                        text = "Tap to copy",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    BrutalistButton(
+                        text = "Close",
+                        onClick = { showReceiveDialog = false },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
-            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+            .androidx.compose.foundation.verticalScroll(androidx.compose.foundation.rememberScrollState())
     ) {
         // Header
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -100,7 +176,7 @@ fun TokenDetailScreen(
                 .height(220.dp)
                 .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
                 .clip(RoundedCornerShape(16.dp))
-                .background(if (MaterialTheme.colorScheme.surface == Color.White) Color.White else Color(0xFF121212))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .padding(12.dp)
         ) {
             if (ohlc.isNotEmpty()) {
@@ -108,15 +184,14 @@ fun TokenDetailScreen(
                     val w = size.width
                     val h = size.height
                     
-                    val maxOverall = ohlc.maxOf { it[2] } // High
-                    val minOverall = ohlc.minOf { it[3] } // Low
+                    val maxOverall = ohlc.maxOf { it[2] }
+                    val minOverall = ohlc.minOf { it[3] }
                     val range = (maxOverall - minOverall).coerceAtLeast(0.0001)
                     
                     val candleWidth = w / ohlc.size
                     val spacing = candleWidth * 0.2f
                     
                     ohlc.forEachIndexed { i, candle ->
-                        // [timestamp, open, high, low, close]
                         val open = candle[1]
                         val high = candle[2]
                         val low = candle[3]
@@ -127,7 +202,6 @@ fun TokenDetailScreen(
                         
                         val x = i * candleWidth + spacing / 2
                         
-                        // Normalize Y
                         fun normalize(v: Double) = h - ((v - minOverall).toFloat() / range.toFloat()) * h
                         
                         val yHigh = normalize(high)
@@ -135,7 +209,6 @@ fun TokenDetailScreen(
                         val yOpen = normalize(open)
                         val yClose = normalize(close)
                         
-                        // Draw Wick
                         drawLine(
                             color = color,
                             start = Offset(x + (candleWidth - spacing) / 2, yHigh),
@@ -143,7 +216,6 @@ fun TokenDetailScreen(
                             strokeWidth = 1.dp.toPx()
                         )
                         
-                        // Draw Candle Body
                         val top = kotlin.math.min(yOpen, yClose)
                         val bottom = kotlin.math.max(yOpen, yClose)
                         val rectHeight = (bottom - top).coerceAtLeast(1f)
@@ -171,8 +243,9 @@ fun TokenDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp)) // Changed border width to 1.dp
+                    .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
                     .clip(RoundedCornerShape(12.dp))
+                    .clickable { clipboardManager.setText(AnnotatedString(contractAddress)) }
                     .padding(12.dp)
             ) {
                 Text(
@@ -210,16 +283,16 @@ fun TokenDetailScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            com.antigravity.cryptowallet.ui.components.BrutalistButton(
+            BrutalistButton(
                 text = "Send",
                 onClick = onNavigateToSend,
-                icon = Icons.Default.ArrowOutward, // Added icon
+                icon = Icons.Default.ArrowOutward,
                 modifier = Modifier.weight(1f)
             )
-            com.antigravity.cryptowallet.ui.components.BrutalistButton(
+            BrutalistButton(
                 text = "Receive",
-                onClick = { /* Show Receive Dialog */ },
-                icon = Icons.Default.FileDownload, // Added icon
+                onClick = { showReceiveDialog = true },
+                icon = Icons.Default.FileDownload,
                 modifier = Modifier.weight(1f),
                 inverted = true
             )
@@ -238,7 +311,7 @@ fun TokenDetailScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp)) // Changed border width to 1.dp
+                        .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
                         .clip(RoundedCornerShape(12.dp))
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -257,7 +330,5 @@ fun TokenDetailScreen(
         }
         
         Spacer(modifier = Modifier.height(24.dp))
-        
-        // Use Html text if needed, but plain text for now.
     }
 }

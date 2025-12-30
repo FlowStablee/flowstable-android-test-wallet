@@ -24,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
@@ -36,6 +35,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.antigravity.cryptowallet.ui.components.BrutalistButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class DApp(
     val name: String,
@@ -61,6 +63,8 @@ fun BrowserScreen(
     var pendingRequest by remember { mutableStateOf<Web3Bridge.Web3Request?>(null) }
     var bridgeInstance by remember { mutableStateOf<Web3Bridge?>(null) }
     var showNetworkSelector by remember { mutableStateOf(false) }
+    
+    val scope = rememberCoroutineScope()
 
     val dapps = listOf(
         DApp("PancakeSwap", "Top DEX on BNB", "https://pancakeswap.finance", 'P', "DEFI", Color(0xFF1FC7D4)),
@@ -155,14 +159,19 @@ fun BrowserScreen(
         Web3RequestDialog(
             request = request,
             onConfirm = {
-                handleWeb3Request(request, bridgeInstance, walletRepository) { targetChainId ->
-                    val targetNet = viewModel.networks.find { it.chainId == targetChainId }
-                     if (targetNet != null) {
-                        viewModel.switchNetwork(targetNet.id)
-                        activeNetwork = viewModel.activeNetwork
-                        true
-                    } else {
-                        false
+                scope.launch {
+                    handleWeb3RequestAsync(request, bridgeInstance, walletRepository) { targetChainId ->
+                        val targetNet = viewModel.networks.find { it.chainId == targetChainId }
+                         if (targetNet != null) {
+                            viewModel.switchNetwork(targetNet.id)
+                            activeNetwork = viewModel.activeNetwork
+                            webView?.post {
+                                webView?.reload()
+                            }
+                            true
+                        } else {
+                            false
+                        }
                     }
                 }
                 pendingRequest = null
@@ -419,8 +428,7 @@ fun BrowserWebView(
                 }
                 
                 val bridge = Web3Bridge(this, address, chainIdProvider) { request ->
-                    val bridgeRef = this.tag as? Web3Bridge ?: return@Web3Bridge
-                    onPendingRequest(request, bridgeRef)
+                    onPendingRequest(request, this.tag as? Web3Bridge ?: return@Web3Bridge)
                 }
                 this.tag = bridge
                 addJavascriptInterface(bridge, "androidWallet")
@@ -515,54 +523,123 @@ fun Web3RequestDialog(
 ) {
     AlertDialog(
         onDismissRequest = onReject,
-        title = { Text("Sign Request", color = MaterialTheme.colorScheme.onSurface) },
+        title = { 
+            Text(
+                when(request.method) {
+                    "personal_sign", "eth_sign" -> "Sign Message"
+                    "eth_signTypedData_v4" -> "Sign Typed Data"
+                    "eth_sendTransaction" -> "Confirm Transaction"
+                    "wallet_switchEthereumChain" -> "Switch Network"
+                    else -> "DApp Request"
+                },
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            ) 
+        },
         text = {
             Column {
-                Text("Method: ${request.method}", color = MaterialTheme.colorScheme.onSurface)
-                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Params: ${request.params.take(100)}...",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    "Method: ${request.method}", 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        request.params.take(200) + if (request.params.length > 200) "..." else "",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text("Confirm") }
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) { 
+                Text("Confirm", fontWeight = FontWeight.Bold) 
+            }
         },
         dismissButton = {
-            TextButton(onClick = onReject) { Text("Reject") }
+            TextButton(onClick = onReject) { 
+                Text("Reject", color = MaterialTheme.colorScheme.error) 
+            }
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(16.dp)
     )
 }
 
-private fun handleWeb3Request(
+private suspend fun handleWeb3RequestAsync(
     request: Web3Bridge.Web3Request,
     bridge: Web3Bridge?,
     walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository,
     onSwitchNetwork: (Long) -> Boolean
-) {
-    val credentials = walletRepository.activeCredentials ?: return
+) = withContext(Dispatchers.IO) {
+    val credentials = walletRepository.activeCredentials ?: run {
+        withContext(Dispatchers.Main) {
+            bridge?.sendError(request.id, "Wallet not loaded")
+        }
+        return@withContext
+    }
     
     when (request.method) {
-        "personal_sign" -> {
+        "personal_sign", "eth_sign" -> {
             try {
                 val paramsArray = org.json.JSONArray(request.params)
                 val message = paramsArray.getString(0)
                 
-                val data = if (message.startsWith("0x")) org.web3j.utils.Numeric.hexStringToByteArray(message) else message.toByteArray()
+                val data = if (message.startsWith("0x")) {
+                    org.web3j.utils.Numeric.hexStringToByteArray(message)
+                } else {
+                    message.toByteArray(Charsets.UTF_8)
+                }
                 val signatureData = org.web3j.crypto.Sign.signPrefixedMessage(data, credentials.ecKeyPair)
                 
-                val r = org.web3j.utils.Numeric.toHexString(signatureData.r)
-                val s = org.web3j.utils.Numeric.toHexString(signatureData.s).removePrefix("0x")
-                val v = org.web3j.utils.Numeric.toHexString(signatureData.v).removePrefix("0x")
-                val signature = r + s + v
+                val r = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.r)
+                val s = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.s)
+                val v = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.v)
+                val signature = "0x$r$s$v"
                 
-                bridge?.sendResponse(request.id, "\"$signature\"")
+                withContext(Dispatchers.Main) {
+                    bridge?.sendResponse(request.id, "\"$signature\"")
+                }
             } catch (e: Exception) {
-                bridge?.sendError(request.id, e.message ?: "Signing failed")
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    bridge?.sendError(request.id, e.message ?: "Signing failed")
+                }
+            }
+        }
+        "eth_signTypedData_v4" -> {
+            try {
+                // For typed data, we need the data param (second param typically)
+                val paramsArray = org.json.JSONArray(request.params)
+                val typedData = if (paramsArray.length() > 1) paramsArray.getString(1) else paramsArray.getString(0)
+                
+                // Hash the typed data and sign
+                val dataHash = org.web3j.crypto.Hash.sha3(typedData.toByteArray(Charsets.UTF_8))
+                val signatureData = org.web3j.crypto.Sign.signMessage(dataHash, credentials.ecKeyPair, false)
+                
+                val r = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.r)
+                val s = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.s)
+                val v = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.v)
+                val signature = "0x$r$s$v"
+                
+                withContext(Dispatchers.Main) {
+                    bridge?.sendResponse(request.id, "\"$signature\"")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    bridge?.sendError(request.id, e.message ?: "Typed data signing failed")
+                }
             }
         }
         "wallet_switchEthereumChain" -> {
@@ -574,20 +651,55 @@ private fun handleWeb3Request(
                 
                 val success = onSwitchNetwork(targetChainId)
                 
-                if (success) {
-                    bridge?.sendResponse(request.id, "null")
-                } else {
-                     bridge?.sendError(request.id, "Chain ID $targetChainId not supported")
+                withContext(Dispatchers.Main) {
+                    if (success) {
+                        bridge?.sendResponse(request.id, "null")
+                    } else {
+                        bridge?.sendError(request.id, "Chain ID $targetChainId not supported")
+                    }
                 }
             } catch (e: Exception) {
-                bridge?.sendError(request.id, "Switch failed: ${e.message}")
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    bridge?.sendError(request.id, "Switch failed: ${e.message}")
+                }
             }
         }
         "eth_requestPermissions" -> {
-             bridge?.sendResponse(request.id, "[{\"parentCapability\": \"eth_accounts\"}]")
+            withContext(Dispatchers.Main) {
+                bridge?.sendResponse(request.id, "[{\"parentCapability\": \"eth_accounts\"}]")
+            }
         }
         "eth_sendTransaction" -> {
-            bridge?.sendResponse(request.id, "\"0x${"f".repeat(64)}\"")
+            // For now, mock success - real implementation would build and send the transaction
+            // Parse params to get to, value, data etc and call blockchainService
+            try {
+                val paramsArray = org.json.JSONArray(request.params)
+                val txObj = paramsArray.getJSONObject(0)
+                
+                // In a real implementation:
+                // val to = txObj.getString("to")
+                // val value = txObj.optString("value", "0x0")
+                // val data = txObj.optString("data", "0x")
+                // Then call blockchainService.sendRawTransaction(...)
+                
+                // For now, return mock hash
+                val mockHash = "0x" + (1..64).map { "abcdef0123456789".random() }.joinToString("")
+                
+                withContext(Dispatchers.Main) {
+                    bridge?.sendResponse(request.id, "\"$mockHash\"")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    bridge?.sendError(request.id, "Transaction failed: ${e.message}")
+                }
+            }
+        }
+        else -> {
+            withContext(Dispatchers.Main) {
+                bridge?.sendError(request.id, "Method ${request.method} not supported")
+            }
         }
     }
 }

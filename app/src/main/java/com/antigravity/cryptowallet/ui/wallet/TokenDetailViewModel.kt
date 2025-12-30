@@ -52,6 +52,9 @@ class TokenDetailViewModel @Inject constructor(
 
     val address: String
         get() = walletRepository.getAddress()
+    
+    val walletAddress: String
+        get() = walletRepository.getAddress()
 
     fun loadTokenData(symbol: String) {
         currentSymbol = symbol
