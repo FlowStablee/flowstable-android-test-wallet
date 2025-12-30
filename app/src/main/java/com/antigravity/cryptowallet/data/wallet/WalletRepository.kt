@@ -66,31 +66,36 @@ class WalletRepository @Inject constructor(
         return mnemonic
     }
 
-    fun importWallet(mnemonic: String, name: String = "Imported Wallet"): Boolean {
-        if (!MnemonicUtils.validateMnemonic(mnemonic)) return false
-        
-        val seed = MnemonicUtils.generateSeed(mnemonic, null)
-        val masterKeyPair = Bip32ECKeyPair.generateKeyPair(seed)
-        val path = intArrayOf(44 or Bip32ECKeyPair.HARDENED_BIT, 60 or Bip32ECKeyPair.HARDENED_BIT, 0 or Bip32ECKeyPair.HARDENED_BIT, 0, 0)
-        val derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeyPair, path)
-        val credentials = Credentials.create(derivedKeyPair)
-        
-        val walletCount = secureStorage.getWallets().size
-        val walletName = if (name.isBlank()) "Imported ${walletCount + 1}" else name
-        
-        val walletId = secureStorage.addWallet(walletName, credentials.address, WalletType.MNEMONIC)
-        secureStorage.saveMnemonicForWallet(walletId, mnemonic)
-        secureStorage.saveMnemonic(mnemonic)
-        
-        activeCredentials = credentials
-        refreshWallets()
-        return true
+    suspend fun importWallet(mnemonic: String, name: String = "Imported Wallet"): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            if (!MnemonicUtils.validateMnemonic(mnemonic)) return@withContext false
+            
+            val seed = MnemonicUtils.generateSeed(mnemonic, null)
+            val masterKeyPair = Bip32ECKeyPair.generateKeyPair(seed)
+            val path = intArrayOf(44 or Bip32ECKeyPair.HARDENED_BIT, 60 or Bip32ECKeyPair.HARDENED_BIT, 0 or Bip32ECKeyPair.HARDENED_BIT, 0, 0)
+            val derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeyPair, path)
+            val credentials = Credentials.create(derivedKeyPair)
+            
+            val walletCount = secureStorage.getWallets().size
+            val walletName = if (name.isBlank()) "Imported ${walletCount + 1}" else name
+            
+            val walletId = secureStorage.addWallet(walletName, credentials.address, WalletType.MNEMONIC)
+            secureStorage.saveMnemonicForWallet(walletId, mnemonic)
+            secureStorage.saveMnemonic(mnemonic)
+            
+            activeCredentials = credentials
+            refreshWallets()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
-    fun importPrivateKey(privateKey: String, name: String = "Imported Wallet"): Boolean {
-        return try {
+    suspend fun importPrivateKey(privateKey: String, name: String = "Imported Wallet"): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
             val cleanKey = if (privateKey.startsWith("0x")) privateKey.substring(2) else privateKey
-            if (cleanKey.length != 64) return false
+            if (cleanKey.length != 64) return@withContext false
             
             val credentials = Credentials.create(cleanKey)
             
@@ -105,6 +110,7 @@ class WalletRepository @Inject constructor(
             refreshWallets()
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }

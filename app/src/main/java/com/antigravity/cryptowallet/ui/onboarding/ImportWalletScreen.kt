@@ -25,18 +25,32 @@ import androidx.lifecycle.ViewModel
 import com.antigravity.cryptowallet.data.wallet.WalletRepository
 import com.antigravity.cryptowallet.ui.components.BrutalistButton
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ImportWalletViewModel @Inject constructor(
     private val walletRepository: WalletRepository
 ) : ViewModel() {
-    fun importWallet(phrase: String): Boolean {
-        return walletRepository.importWallet(phrase)
+    var isLoading by androidx.compose.runtime.mutableStateOf(false)
+        private set
+
+    fun importWallet(phrase: String, onResult: (Boolean) -> Unit) {
+        androidx.lifecycle.viewModelScope.launch {
+            isLoading = true
+            val success = walletRepository.importWallet(phrase)
+            isLoading = false
+            onResult(success)
+        }
     }
 
-    fun importPrivateKey(privateKey: String): Boolean {
-        return walletRepository.importPrivateKey(privateKey)
+    fun importPrivateKey(privateKey: String, onResult: (Boolean) -> Unit) {
+        androidx.lifecycle.viewModelScope.launch {
+            isLoading = true
+            val success = walletRepository.importPrivateKey(privateKey)
+            isLoading = false
+            onResult(success)
+        }
     }
 }
 
@@ -157,27 +171,33 @@ fun ImportWalletScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         BrutalistButton(
-            text = "Import Wallet",
+            text = if (viewModel.isLoading) "Importing..." else "Import Wallet",
+            enabled = !viewModel.isLoading,
             onClick = {
+                if (viewModel.isLoading) return@BrutalistButton
+                
                 val trimmedInput = input.trim()
                 if (trimmedInput.isEmpty()) {
                     error = "Please enter your ${if (importType == 0) "seed phrase" else "private key"}"
                     return@BrutalistButton
                 }
                 
-                val success = if (importType == 0) {
-                    viewModel.importWallet(trimmedInput)
+                if (importType == 0) {
+                    viewModel.importWallet(trimmedInput) { success ->
+                         if (success) {
+                            onWalletImported()
+                        } else {
+                            error = "Invalid seed phrase. Please check your words and try again."
+                        }
+                    }
                 } else {
-                    viewModel.importPrivateKey(trimmedInput)
-                }
-
-                if (success) {
-                    onWalletImported()
-                } else {
-                    error = if (importType == 0) 
-                        "Invalid seed phrase. Please check your words and try again." 
-                    else 
-                        "Invalid private key format. Please verify and try again."
+                    viewModel.importPrivateKey(trimmedInput) { success ->
+                        if (success) {
+                            onWalletImported()
+                        } else {
+                            error = "Invalid private key format. Please verify and try again."
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
