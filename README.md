@@ -1,91 +1,96 @@
-# 🪐 FlowStable Wallet
 
-[![Android Build](https://github.com/FlowStablee/flowstable-android-test-wallet/actions/workflows/android.yml/badge.svg)](https://github.com/FlowStablee/flowstable-android-test-wallet/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-purple.svg)](https://kotlinlang.org/)
-[![Compose](https://img.shields.io/badge/Jetpack-Compose-green.svg)](https://developer.android.com/jetpack/compose)
+```
+    ___        __  _                        _ __      
+   / _ | ___  / /_(_)__  _______ __  __(_) /___ __
+  / __ |/ _ \/ __/ / _ \/ __/ _` \ \/ / / __/ // /
+ /_/ |_/_//_/\__/_/\_, /_/  \_,_/ \__/ /_/\__, / 
+                  /___/                      /____/  
+```
 
-**Antigravity** is a high-performance, non-custodial EVM wallet for Android. Built with a raw, **Brutalist Design Aesthetic**, it prioritizes speed, security, and a uncompromising user experience.
+```bash
+>> SYSTEM_STATUS    :: ONLINE
+>> DEPLOYMENT       :: ANDROID_EVM_INTERFACE
+>> ENCRYPTION       :: AES-256-GCM / ANDROID_KEYSTORE
+>> UI_MODE          :: NEO_BRUTALIST / MONOCHROME
+```
 
----
+# [ MANIFESTO ]
 
-## 🛠 Features
-
-### 💎 Wallet Management
-- **Non-Custodial**: Your keys, your crypto. Generated via BIP-39 mnemonic phrases.
-- **Multi-Chain Support**: Ethereum, Polygon, BSC, Arbitrum, Optimism, and more.
-- **Asset Tracking**: Real-time balance updates and price tracking via CoinGecko.
-- **Custom Tokens**: Add any ERC-20 token by contract address.
-- **QR Support**: Integrated QR code generation for effortless receiving.
-
-### 🌐 Web3 Browser (DApp Gateway)
-- **EIP-1193 Injection**: Full support for connecting to dApps (PancakeSwap, Uniswap, etc.).
-- **Secure Signatures**: In-app confirmation dialogs for `personal_sign` and `eth_sendTransaction`.
-- **Advanced Compatibility**: Optimized WebView with DOM storage and database support.
-
-### 📜 Transaction History
-- **Local Persistence**: Full history stored locally via Room DB for instant access.
-- **Brutalist UI**: Clear, high-contrast list showing transaction status, amounts, and timestamps.
-
-### 🛡 Security First
-- **Biometric Authentication**: Fingerprint and Face Unlock support.
-- **PIN Protection**: Custom secure Numpad for app access.
-- **AES Encryption**: Seed phrases and private keys encrypted using Android Keystore (TEE-backed).
-- **Advanced Privacy**: Anti-screenshot protection and clipboard security.
+```
+// ANTIGRAVITY IS A HIGH-PERFORMANCE NON-CUSTODIAL WALLET.
+// NO TRACKERS. NO ADS. NO COMPROMISE.
+// PURE FUNCTIONALITY WRAPPED IN RAW AESTHETICS.
+```
 
 ---
 
-## 🚀 Tech Stack
+# [ CORE_MODULES ]
 
-| Category | Technology |
+### `[>] KERNEL`
+```
+ |
+ +-- [ NON_CUSTODIAL ] :: PRIVATE_KEYS_REMAIN_LOCAL
+ +-- [ MULTI_CHAIN   ] :: ETH / POLYGON / BSC / ARBITRUM / OPTIMISM
+ +-- [ ASSET_TRACK   ] :: REALTIME_PRICE_FEED [SOURCE:COINGECKO]
+ +-- [ SECURE_CORE   ] :: BIP39_MNEMONIC / TEE_BACKED_STORAGE
+```
+
+### `[>] INTERFACE`
+```
+ |
+ +-- [ NEO_BRUTALISM ] :: HIGH_CONTRAST / HARD_SHADOWS / MONOSPACE
+ +-- [ DAPP_GATEWAY  ] :: EIP-1193_INJECTED_WEBVIEW / WEB3_BROWSER
+ +-- [ BIO_AUTH      ] :: BIOMETRIC_HARDWARE_LOCK
+```
+
+---
+
+# [ TECH_STACK ]
+
+| COMPONENT | SPECIFICATION |
 | :--- | :--- |
-| **Language** | Kotlin |
-| **UI Framework** | Jetpack Compose (100%) |
-| **Blockchain** | Web3j |
-| **Architecture** | MVVM + Clean Architecture |
-| **DI** | Hilt |
-| **Database** | Room |
-| **Networking** | Retrofit + OkHttp |
-| **Security** | Android Keystore / Biometrics |
+| **`LANGUAGE`** | KOTLIN `[JVM_17]` |
+| **`UI_SYSTEM`** | JETPACK_COMPOSE `[MATERIAL_3]` |
+| **`WEB3_CORE`** | WEB3J `[LIGHTWEIGHT]` |
+| **`ARCH`** | MVVM + CLEAN_ARCHITECTURE |
+| **`DI`** | HILT `[DAGGER]` |
+| **`NETWORK`** | RETROFIT + OKHTTP |
+| **`LOCATION`** | C:\USERS\PRANA\.GEMINI\ANTIGRAVITY\SCRATCH\ANDROIDCRYPTOWALLET |
 
 ---
 
-## 📦 Build Instructions
+# [ DEPLOYMENT_PROTOCOL ]
 
-### Prerequisites
-- Android Studio Hedgehog (2023.1.1) or later.
-- JDK 17.
-- Android SDK 34 (Target).
+### `1. INITIALIZE_REPOSITORY`
+```bash
+$ git clone https://github.com/FlowStablee/flowstable-android-test-wallet.git
+$ cd flowstable-android-test-wallet
+```
 
-### Step-by-Step
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/FlowStablee/flowstable-android-test-wallet.git
-   ```
-2. **Open in Android Studio**
-   Wait for Gradle to sync.
-3. **Build APK**
-   - Click `Build > Build Bundle(s) / APK(s) > Build APK(s)`.
-4. **Run**
-   - Use an emulator (API 26+) or a physical device.
+### `2. EXECUTE_BUILD`
+```bash
+# REQUIREMENT: JDK 17 / ANDROID SDK 34
+$ ./gradlew clean assembleDebug
+```
 
----
-
-## 📐 Architecture Overview
-
-The app follows **Modern Android Development (MAD)** practices:
-- **UI Layer**: Composable screens observing StateFlows from ViewModels.
-- **Domain Layer**: Repositories abstracting data sources (Blockchain, Local DB, API).
-- **Data Layer**: Room DAOs, Retrofit Interfaces, and SecureStorage.
+### `3. INSTALL_PACKAGE`
+```bash
+$ adb install app/build/outputs/apk/debug/app-debug.apk
+```
 
 ---
 
-## 📜 License
+# [ LICENSE_DATA ]
 
-Distributed under the MIT License. See `LICENSE` for more information.
+```
+>> MIT_LICENSE
+>> PERMISSION_GRANTED :: COMMERCIAL_USE / MODIFICATION / DISTRIBUTION
+>> WARRANTY           :: NULL
+```
 
 ---
 
-<p align="center">
-  <i>Built with 🖤 by FlowStable Labs </i>
-</p>
+```
+// END_OF_FILE
+// BUILT_BY_FLOWSTABLE_LABS
+```
