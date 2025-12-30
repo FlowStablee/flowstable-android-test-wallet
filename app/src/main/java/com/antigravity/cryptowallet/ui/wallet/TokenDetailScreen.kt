@@ -32,6 +32,8 @@ import androidx.compose.ui.window.Dialog
 import com.antigravity.cryptowallet.ui.components.BrutalistButton
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
 import com.antigravity.cryptowallet.utils.QrCodeGenerator
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun TokenDetailScreen(
@@ -133,7 +135,7 @@ fun TokenDetailScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
-            .androidx.compose.foundation.verticalScroll(androidx.compose.foundation.rememberScrollState())
+            .verticalScroll(rememberScrollState())
     ) {
         // Header
         Row(verticalAlignment = Alignment.CenterVertically) {
