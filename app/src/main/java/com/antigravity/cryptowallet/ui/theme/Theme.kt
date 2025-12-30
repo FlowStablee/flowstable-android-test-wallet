@@ -182,6 +182,7 @@ val BrutalistTypography = Typography(
 @Composable
 fun CryptoWalletTheme(
     themeType: ThemeType = ThemeType.DEFAULT,
+    darkTheme: Boolean = androidx.compose.foundation.isSystemInDarkTheme(), // Kept for compatibility, ignored
     content: @Composable () -> Unit
 ) {
     // Theme is now independent of system dark mode
