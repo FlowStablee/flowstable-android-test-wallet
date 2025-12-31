@@ -509,17 +509,18 @@ fun WalletScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (asset.iconUrl != null) {
-                                        AsyncImage(
+                                        coil.compose.AsyncImage(
                                             model = asset.iconUrl,
                                             contentDescription = asset.symbol,
-                                            modifier = Modifier.fillMaxSize().padding(6.dp)
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
                                         )
                                     } else {
                                         Text(
                                             asset.symbol.take(1), 
-                                            color = MaterialTheme.colorScheme.onSurface, 
+                                            color = MaterialTheme.colorScheme.onBackground, 
                                             fontWeight = FontWeight.Black,
-                                            fontSize = 16.sp
+                                            fontSize = 14.sp
                                         )
                                     }
                                 }
