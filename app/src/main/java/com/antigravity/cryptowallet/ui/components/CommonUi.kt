@@ -46,12 +46,12 @@ fun BrutalistButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    val offset = if (isPressed) 0.dp else 3.dp
+    val offset = if (isPressed) 0.dp else 2.dp
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp) // Reduced from 60dp
+            .height(48.dp) // Reduced from 52dp
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -63,8 +63,8 @@ fun BrutalistButton(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .offset(3.dp, 3.dp)
+                .height(44.dp)
+                .offset(2.dp, 2.dp)
                 .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
         )
 
@@ -72,8 +72,8 @@ fun BrutalistButton(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .offset(x = 3.dp - offset, y = 3.dp - offset)
+                .height(44.dp)
+                .offset(x = 2.dp - offset, y = 2.dp - offset)
                 .background(
                     if (enabled) backgroundColor else Color.Gray,
                     RoundedCornerShape(12.dp)
@@ -154,14 +154,15 @@ fun BrutalistTextField(
 fun BrutalistHeader(text: String) {
     Box(
         modifier = Modifier
-            .padding(vertical = 12.dp)
+            .padding(vertical = 8.dp)
             .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = text.uppercase(),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Black,
             color = MaterialTheme.colorScheme.onBackground,
             letterSpacing = 1.sp
@@ -225,12 +226,13 @@ fun BrutalistBottomBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.background, RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.background, RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(24.dp))
             .height(64.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         items.forEach { item ->
             val isSelected = currentRoute == item.route
@@ -239,24 +241,29 @@ fun BrutalistBottomBar(
                     .weight(1f)
                     .fillMaxHeight()
                     .padding(4.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(20.dp))
                     .background(if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Transparent)
                     .clickable { onItemClick(item.route) }
-                    .padding(4.dp),
+                    .padding(vertical = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     androidx.compose.material3.Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
                         tint = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = item.title.uppercase(),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
+                        color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
+                        letterSpacing = 0.5.sp
                     )
                 }
             }

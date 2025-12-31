@@ -39,6 +39,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import com.antigravity.cryptowallet.utils.QrCodeGenerator
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.antigravity.cryptowallet.data.blockchain.BlockchainService
@@ -115,6 +116,9 @@ class WalletViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
+            // Ensure wallet is loaded into memory first
+            walletRepository.loadWallet()
+            
             if (!walletRepository.isWalletCreated()) return@launch
             
             // Collect assets
@@ -329,69 +333,80 @@ fun WalletScreen(
             }
         }
 
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
                 BrutalistHeader("Dashboard")
+                
                 Row(
-                    modifier = Modifier
-                        .clickable { showNetworkSelector = true }
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(6.dp).background(Color.Green, androidx.compose.foundation.shape.CircleShape))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        viewModel.activeNetwork.name.uppercase(),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
-                    )
+                    androidx.compose.material3.IconButton(
+                        onClick = { viewModel.refresh() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        androidx.compose.material3.Icon(
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = "Refresh",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    androidx.compose.material3.IconButton(
+                        onClick = onSetupSecurity,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        androidx.compose.material3.Icon(
+                            imageVector = Icons.Filled.Lock,
+                            contentDescription = "Security Settings",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
-            Row {
-                androidx.compose.material3.IconButton(
-                    onClick = { viewModel.refresh() },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Filled.Refresh,
-                        contentDescription = "Refresh",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                androidx.compose.material3.IconButton(
-                    onClick = onSetupSecurity,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Filled.Lock,
-                        contentDescription = "Security Settings",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+            
+            Row(
+                modifier = Modifier
+                    .clickable { showNetworkSelector = true }
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.size(5.dp).background(Color.Green, androidx.compose.foundation.shape.CircleShape))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    viewModel.activeNetwork.name.uppercase(),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    letterSpacing = 1.sp
+                )
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.03f), RoundedCornerShape(16.dp))
-                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
-                .padding(20.dp)
+                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.02f), RoundedCornerShape(20.dp))
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(20.dp))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "TOTAL BALANCE",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    fontSize = 8.sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.sp
                 )
@@ -427,7 +442,7 @@ fun WalletScreen(
                     text = "ASSETS", 
                     color = if (viewModel.selectedTab == 0) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Black,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     letterSpacing = 1.sp
                 )
             }
@@ -443,7 +458,7 @@ fun WalletScreen(
                     text = "NFTS", 
                     color = if (viewModel.selectedTab == 1) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Black,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     letterSpacing = 1.sp
                 )
             }
@@ -484,21 +499,29 @@ fun WalletScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Symbol Icon
+                                // Symbol Icon with Coil
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
-                                        .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
+                                        .size(40.dp)
+                                        .background(MaterialTheme.colorScheme.surface, androidx.compose.foundation.shape.CircleShape)
                                         .border(2.dp, MaterialTheme.colorScheme.onBackground, androidx.compose.foundation.shape.CircleShape)
                                         .clip(androidx.compose.foundation.shape.CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        asset.symbol.take(1), 
-                                        color = MaterialTheme.colorScheme.onBackground, 
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 16.sp
-                                    )
+                                    if (asset.iconUrl != null) {
+                                        AsyncImage(
+                                            model = asset.iconUrl,
+                                            contentDescription = asset.symbol,
+                                            modifier = Modifier.fillMaxSize().padding(6.dp)
+                                        )
+                                    } else {
+                                        Text(
+                                            asset.symbol.take(1), 
+                                            color = MaterialTheme.colorScheme.onSurface, 
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 16.sp
+                                        )
+                                    }
                                 }
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column {
@@ -506,14 +529,14 @@ fun WalletScreen(
                                         text = asset.symbol, 
                                         fontWeight = FontWeight.Black, 
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 16.sp
+                                        fontSize = 14.sp
                                     )
                                     Text(
                                         text = asset.networkName.uppercase(), 
-                                        fontSize = 10.sp, 
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Gray,
-                                        letterSpacing = 1.sp
+                                        fontSize = 8.sp, 
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.Gray.copy(alpha = 0.7f),
+                                        letterSpacing = 0.5.sp
                                     )
                                 }
                             }
@@ -522,13 +545,13 @@ fun WalletScreen(
                                     text = asset.balanceUsd, 
                                     fontWeight = FontWeight.Black, 
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 16.sp
+                                    fontSize = 15.sp
                                 )
                                 Text(
                                     text = asset.balance, 
-                                    fontSize = 12.sp, 
+                                    fontSize = 10.sp, 
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 )
                             }
                         }

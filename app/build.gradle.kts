@@ -122,4 +122,7 @@ dependencies {
 
     // QR Code
     implementation("com.google.zxing:core:3.5.3")
+
+    // Image Loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }

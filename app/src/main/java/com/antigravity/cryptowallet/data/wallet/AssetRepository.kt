@@ -41,6 +41,7 @@ class AssetRepository @Inject constructor(
              val defaults = listOf(
                  TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7", decimals = 6, chainId = "eth", coingeckoId = "tether"),
                  TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals = 6, chainId = "eth", coingeckoId = "usd-coin"),
+                 TokenEntity(symbol = "DAI", name = "Dai", contractAddress = "0x6b175474e89094c44da98b954eedeac495271d0f", decimals = 18, chainId = "eth", coingeckoId = "dai"),
                  TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0x55d398326f99059ff775485246999027b3197955", decimals = 18, chainId = "bsc", coingeckoId = "tether"),
                  TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", decimals = 18, chainId = "bsc", coingeckoId = "usd-coin"),
                  TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", decimals = 6, chainId = "matic", coingeckoId = "tether"),
@@ -73,12 +74,12 @@ class AssetRepository @Inject constructor(
                     val marketData = marketMap[net.coingeckoId]
                     val price = marketData?.currentPrice ?: 0.0
                     val balanceUsd = ethBalance.multiply(BigDecimal(price))
-                    val imageUrl = marketData?.image
+                    val imageUrl = marketData?.image ?: net.iconUrl
 
                     val balanceStr = if (ethBalance.compareTo(BigDecimal.ZERO) == 0) {
                         "0.00 ${net.symbol}"
-                    } else if (ethBalance < BigDecimal("0.0001")) {
-                        String.format("%.6f %s", ethBalance, net.symbol)
+                    } else if (ethBalance < BigDecimal("0.000001")) {
+                        String.format("%.8f %s", ethBalance, net.symbol)
                     } else {
                         String.format("%.4f %s", ethBalance, net.symbol)
                     }
@@ -96,7 +97,17 @@ class AssetRepository @Inject constructor(
                     )
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    null
+                    AssetUiModel(
+                        id = "native-${net.id}",
+                        symbol = net.symbol,
+                        name = net.name,
+                        balance = "0.00 ${net.symbol}",
+                        balanceUsd = "$0.00",
+                        iconUrl = net.iconUrl,
+                        networkName = net.name,
+                        rawBalance = 0.0,
+                        price = 0.0
+                    )
                 }
             }
         }
@@ -123,21 +134,30 @@ class AssetRepository @Inject constructor(
                             String.format("%.4f %s", tokenBalance, token.symbol)
                         }
     
-                        AssetUiModel(
-                            id = "token-${token.id}",
-                            symbol = token.symbol,
-                            name = token.name,
-                            balance = balanceStr,
-                            balanceUsd = String.format("$%.2f", balanceUsd),
-                            iconUrl = imageUrl,
-                            networkName = net.name,
-                            rawBalance = tokenBalance.toDouble(),
-                            price = price
-                        )
-                    } else null
+                    AssetUiModel(
+                        id = "token-${token.id}",
+                        symbol = token.symbol,
+                        name = token.name,
+                        balance = balanceStr,
+                        balanceUsd = String.format("$%.2f", balanceUsd),
+                        iconUrl = imageUrl,
+                        networkName = net.name,
+                        rawBalance = tokenBalance.toDouble(),
+                        price = price
+                    )
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    null
+                    AssetUiModel(
+                        id = "token-${token.id}",
+                        symbol = token.symbol,
+                        name = token.name,
+                        balance = "0.00 ${token.symbol}",
+                        balanceUsd = "$0.00",
+                        iconUrl = null,
+                        networkName = networkRepository.getNetwork(token.chainId).name,
+                        rawBalance = 0.0,
+                        price = 0.0
+                    )
                 }
             }
         }
