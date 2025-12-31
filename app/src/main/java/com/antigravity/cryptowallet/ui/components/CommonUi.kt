@@ -255,7 +255,7 @@ fun BrutalistBottomBar(
                         imageVector = item.icon,
                         contentDescription = item.title,
                         tint = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
