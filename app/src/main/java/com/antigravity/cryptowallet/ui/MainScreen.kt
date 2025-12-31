@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ fun MainScreen(
 
     val items = listOf(
         BottomNavItem("Wallet", Icons.Filled.Home, "wallet"),
+        BottomNavItem("Card", Icons.Filled.CreditCard, "card"),
         BottomNavItem("Browser", Icons.Filled.Public, "browser"),
         BottomNavItem("History", Icons.Filled.History, "history"),
         BottomNavItem("Settings", Icons.Filled.Settings, "settings")
@@ -76,6 +78,9 @@ fun MainScreen(
                     onNavigateToSend = onNavigateToTransfer,
                     onNavigateToTokenDetail = onNavigateToTokenDetail
                 )
+            }
+            composable("card") {
+                com.antigravity.cryptowallet.ui.card.CardScreen()
             }
             composable("browser") {
                 com.antigravity.cryptowallet.ui.browser.BrowserScreen()
