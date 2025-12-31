@@ -343,21 +343,22 @@ fun DAppIconItem(dapp: DApp, onClick: () -> Unit) {
     ) {
         Box(
             modifier = Modifier
-                .size(56.dp)
-                .background(dapp.color, RoundedCornerShape(16.dp)),
+                .size(48.dp) // Reduced from 56dp
+                .background(dapp.color, RoundedCornerShape(14.dp)), // Adjusted radius
             contentAlignment = Alignment.Center
         ) {
             Text(
                 dapp.iconChar.toString(),
                 color = Color.White,
-                fontSize = 24.sp,
+                fontSize = 20.sp, // Reduced from 24sp
                 fontWeight = FontWeight.Bold
             )
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             dapp.name,
             style = MaterialTheme.typography.bodySmall,
+            fontSize = 11.sp, // Explicitly smaller text
             maxLines = 1,
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -371,33 +372,34 @@ fun DAppListItem(dapp: DApp, onClick: () -> Unit) {
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f), RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .padding(12.dp),
+            .padding(8.dp), // Reduced padding
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .background(dapp.color, RoundedCornerShape(12.dp)),
+                .size(40.dp) // Reduced size
+                .background(dapp.color, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 dapp.iconChar.toString(),
                 color = Color.White,
-                fontSize = 20.sp,
+                fontSize = 18.sp, // Reduced font size
                 fontWeight = FontWeight.Bold
             )
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 dapp.name,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall, // Reduced style
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 dapp.description,
                 style = MaterialTheme.typography.bodySmall,
+                fontSize = 10.sp, // Explicitly smaller
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
