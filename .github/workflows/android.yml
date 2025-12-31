@@ -17,7 +17,6 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Report – Checkout completed
-      continue-on-error: true
       uses: appleboy/telegram-action@v0.1.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -31,7 +30,6 @@ jobs:
         distribution: 'temurin'
 
     - name: Report – JDK ready
-      continue-on-error: true
       uses: appleboy/telegram-action@v0.1.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -44,7 +42,6 @@ jobs:
         gradle-version: '8.4'
 
     - name: Report – Gradle ready
-      continue-on-error: true
       uses: appleboy/telegram-action@v0.1.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -56,7 +53,6 @@ jobs:
 
     - name: Report – Build completed
       if: success()
-      continue-on-error: true
       uses: appleboy/telegram-action@v0.1.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -66,7 +62,19 @@ jobs:
     - name: Prepare APK
       run: cp app/build/outputs/apk/debug/app-debug.apk FlowStable-Wallet-Latest.apk
 
+    - name: Send APK to Telegram
+      if: success()
+      uses: appleboy/telegram-action@v0.1.1
+      with:
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        document: FlowStable-Wallet-Latest.apk
+        message: |
+          ✅ New Android Build Ready!
 
+          App: FlowStable Wallet
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
@@ -84,31 +92,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Direct APK Link
-      run: |
-        echo "### ✅ Build Successful" >> $GITHUB_STEP_SUMMARY
-        echo "Download the raw APK directly here:" >> $GITHUB_STEP_SUMMARY
-        echo "[🚀 Download FlowStable-Wallet-Latest.apk](https://github.com/${{ github.repository }}/releases/download/latest/FlowStable-Wallet-Latest.apk)" >> $GITHUB_STEP_SUMMARY
-
-    - name: Send APK to Telegram
-      if: success()
-      continue-on-error: true
-      uses: appleboy/telegram-action@v1.0.1
-      with:
-        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        to: ${{ secrets.TELEGRAM_CHAT_ID }}
-        document: FlowStable-Wallet-Latest.apk
-        format: markdown
-        message: |
-          ✅ **New Android Build Ready!**
-
-          **App:** FlowStable Wallet
-          **Branch:** `${{ github.ref_name }}`
-          **Commit:** `${{ github.sha }}`
-
     - name: Final build report
       if: always()
-      continue-on-error: true
       uses: appleboy/telegram-action@v0.1.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
