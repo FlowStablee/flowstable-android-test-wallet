@@ -22,6 +22,8 @@ class Web3Bridge(
     fun getInjectionJs(): String {
         val chainId = chainIdProvider()
         val hexChainId = "0x" + chainId.toString(16)
+        
+        // Robust injection that mimics MetaMask behavior
         return """
             (function() {
                 if (window.ethereum && window.ethereum.isAntigravity) return;
@@ -30,12 +32,12 @@ class Web3Bridge(
                 const chainId = '$hexChainId';
                 const networkVersion = '$chainId';
                 
-                console.log('Antigravity Wallet: Injecting Web3 provider...');
+                console.log('Antigravity: Injecting Web3 (Chain: ' + chainId + ')');
 
                 class EthereumProvider {
                     constructor() {
                         this.isAntigravity = true;
-                        this.isMetaMask = true;
+                        this.isMetaMask = true; // Pretend to be MetaMask
                         this.isTrust = true;
                         this.selectedAddress = address;
                         this.chainId = chainId;
@@ -44,89 +46,55 @@ class Web3Bridge(
                         this._listeners = {};
                     }
 
-                    isConnected() {
-                        return this._isConnected;
-                    }
+                    isConnected() { return true; }
 
                     async request(payload) {
-                        console.log('Antigravity Wallet: request', payload);
                         return new Promise((resolve, reject) => {
-                            const id = Math.floor(Math.random() * 1000000); // 8888 + Math...
+                            const id = Math.floor(Math.random() * 1000000);
                             window.callbacks[id] = { resolve, reject };
                             window.androidWallet.postMessage(JSON.stringify({
                                 method: payload.method,
-                                params: JSON.stringify(payload.params || []), // Ensure params are stringified JSON array or object
+                                params: JSON.stringify(payload.params || []),
                                 id: id
                             }));
                         });
                     }
+                    
+                    // Legacy methods
+                    enable() { return this.request({ method: 'eth_requestAccounts' }); }
+                    send(method, params) { return this.request(typeof method === 'string' ? { method, params } : method); }
+                    sendAsync(payload, cb) { this.request(payload).then(r => cb(null, { result: r, id: payload.id, jsonrpc: '2.0' })).catch(e => cb(e)); }
 
-                    enable() {
-                        console.log('Antigravity Wallet: enable');
-                        return this.request({ method: 'eth_requestAccounts' });
-                    }
-
-                    send(method, params) {
-                        console.log('Antigravity Wallet: send', method);
-                        if (typeof method === 'string') {
-                            return this.request({ method, params });
-                        } else {
-                            // Support old style send(payload, callback)
-                            if (params) {
-                                this.request(method).then(res => params(null, { result: res, id: method.id, jsonrpc: '2.0' })).catch(err => params(err));
-                            } else {
-                                return this.request(method);
-                            }
-                        }
-                    }
-
-                    sendAsync(payload, callback) {
-                        console.log('Antigravity Wallet: sendAsync', payload);
-                        this.request(payload)
-                            .then(result => callback(null, { result, id: payload.id, jsonrpc: '2.0' }))
-                            .catch(error => callback(error, null));
-                    }
-
-                    on(event, callback) {
-                        if (!this._listeners[event]) {
-                            this._listeners[event] = [];
-                        }
-                        this._listeners[event].push(callback);
-                    }
-
-                    removeListener(event, callback) {
-                         if (this._listeners[event]) {
-                            this._listeners[event] = this._listeners[event].filter(cb => cb !== callback);
-                        }
+                    on(event, cb) { 
+                        (this._listeners[event] = this._listeners[event] || []).push(cb); 
                     }
                     
-                    emit(event, ...args) {
-                        if (this._listeners[event]) {
-                            this._listeners[event].forEach(cb => cb(...args));
-                        }
+                    removeListener(event, cb) {
+                         if (this._listeners[event]) this._listeners[event] = this._listeners[event].filter(x => x !== cb);
                     }
                 }
 
                 if (!window.ethereum) {
                     window.ethereum = new EthereumProvider();
-                    window.web3 = { currentProvider: window.ethereum };
                 } else {
-                    // If something existed, we might want to override or chain. Force override for now.
+                    // Overwrite existing to ensure we trap requests
                     window.ethereum = new EthereumProvider();
+                }
+                
+                // Shim window.web3
+                if (!window.web3) {
+                    window.web3 = { currentProvider: window.ethereum };
                 }
 
                 window.callbacks = {};
-                
-                window.onRpcResponse = function(id, result, error) {
+                window.onRpcResponse = (id, result, error) => {
                     if (window.callbacks[id]) {
-                        if (error) window.callbacks[id].reject(error);
-                        else window.callbacks[id].resolve(result);
+                        error ? window.callbacks[id].reject(error) : window.callbacks[id].resolve(result);
                         delete window.callbacks[id];
                     }
                 };
                 
                 window.dispatchEvent(new Event('ethereum#initialized'));
-                console.log('Antigravity Wallet: Injection complete.');
             })();
         """.trimIndent()
     }

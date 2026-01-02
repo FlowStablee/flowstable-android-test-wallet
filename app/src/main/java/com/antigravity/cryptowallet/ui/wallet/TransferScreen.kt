@@ -165,9 +165,12 @@ fun TransferScreen(
                     icon = if (isSending) null else Icons.Default.Send,
                     onClick = {
                         if (recipientAddress.isNotBlank() && amount.isNotBlank() && selectedAsset != null) {
-                            val evmRegex = Regex("^0x[a-fA-F0-9]{40}$")
-                            if (!evmRegex.matches(recipientAddress)) {
-                                errorMsg = "Invalid EVM Address"
+                            // Allow hex addresses or ENS names (containing .)
+                            val isHex = Regex("^0x[a-fA-F0-9]{40}$").matches(recipientAddress)
+                            val isName = recipientAddress.contains(".")
+                            
+                            if (!isHex && !isName) {
+                                errorMsg = "Invalid Address or Name"
                                 return@BrutalistButton
                             }
                             

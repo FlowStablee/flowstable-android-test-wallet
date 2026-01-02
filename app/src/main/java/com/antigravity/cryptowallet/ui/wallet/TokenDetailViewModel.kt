@@ -91,7 +91,7 @@ class TokenDetailViewModel @Inject constructor(
                     }
                     
                     // Get Balance
-                    val rawBalance = if (tokenEntity.contractAddress != null) {
+                    val rawBalance = if (!tokenEntity.contractAddress.isNullOrEmpty()) {
                         blockchainService.getTokenBalance(network.rpcUrl, tokenEntity.contractAddress, walletAddress)
                     } else {
                         blockchainService.getBalance(network.rpcUrl, walletAddress)

@@ -99,7 +99,13 @@ fun BrowserScreen(
                 onValueChange = { inputUrl = it },
                 onGo = {
                     if (inputUrl.isNotEmpty()) {
-                        url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
+                        if (inputUrl.startsWith("wc:")) {
+                            viewModel.pair(inputUrl)
+                            Toast.makeText(androidx.compose.ui.platform.LocalContext.current, "Connecting to WalletConnect...", Toast.LENGTH_SHORT).show()
+                            inputUrl = ""
+                        } else {
+                            url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
+                        }
                     }
                 },
                 onHome = {
