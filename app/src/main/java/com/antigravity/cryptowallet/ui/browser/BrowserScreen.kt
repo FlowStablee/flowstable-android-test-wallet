@@ -59,6 +59,7 @@ fun BrowserScreen(
     viewModel: BrowserViewModel = hiltViewModel()
 ) {
     val walletRepository = viewModel.walletRepository
+    val context = androidx.compose.ui.platform.LocalContext.current
     var url by remember { mutableStateOf("") }
     var inputUrl by remember { mutableStateOf("") }
     var webView: WebView? by remember { mutableStateOf(null) }
@@ -101,7 +102,7 @@ fun BrowserScreen(
                     if (inputUrl.isNotEmpty()) {
                         if (inputUrl.startsWith("wc:")) {
                             viewModel.pair(inputUrl)
-                            Toast.makeText(androidx.compose.ui.platform.LocalContext.current, "Connecting to WalletConnect...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Connecting to WalletConnect...", Toast.LENGTH_SHORT).show()
                             inputUrl = ""
                         } else {
                             url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
