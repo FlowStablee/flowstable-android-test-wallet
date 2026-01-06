@@ -208,7 +208,7 @@ fun LockScreen(
                     ) {
                         row.forEach { label ->
                             if (label.isEmpty()) {
-                                Spacer(modifier = Modifier.size(72.dp))
+                                Spacer(modifier = Modifier.weight(1f))
                             } else {
                                 NumpadButton(
                                     label = label,

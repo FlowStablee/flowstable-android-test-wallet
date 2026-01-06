@@ -167,15 +167,15 @@ fun WalletApp(
             val symbol = backStackEntry.arguments?.getString("symbol")
             com.antigravity.cryptowallet.ui.wallet.TransferScreen(
                 onBack = { navController.popBackStack() },
-                onTransactionSuccess = { amount, sym, recipient, txHash ->
-                    navController.navigate("transaction_success/$amount/$sym/$recipient?txHash=$txHash")
+                onTransactionSuccess = { amount, sym, recipient, txHash, networkName ->
+                    navController.navigate("transaction_success/$amount/$sym/$recipient?txHash=$txHash&networkName=$networkName")
                 },
                 initialSymbol = symbol
             )
         }
 
         composable(
-            route = "transaction_success/{amount}/{symbol}/{recipient}?txHash={txHash}",
+            route = "transaction_success/{amount}/{symbol}/{recipient}?txHash={txHash}&networkName={networkName}",
             arguments = listOf(
                 androidx.navigation.navArgument("amount") { type = androidx.navigation.NavType.StringType },
                 androidx.navigation.navArgument("symbol") { type = androidx.navigation.NavType.StringType },
@@ -183,6 +183,10 @@ fun WalletApp(
                 androidx.navigation.navArgument("txHash") { 
                     type = androidx.navigation.NavType.StringType 
                     defaultValue = "Unknown"
+                },
+                androidx.navigation.navArgument("networkName") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = "Ethereum"
                 }
             )
         ) { backStackEntry ->
@@ -190,12 +194,14 @@ fun WalletApp(
             val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
             val recipient = backStackEntry.arguments?.getString("recipient") ?: ""
             val txHash = backStackEntry.arguments?.getString("txHash") ?: "Unknown"
+            val networkName = backStackEntry.arguments?.getString("networkName") ?: "Ethereum"
 
             com.antigravity.cryptowallet.ui.wallet.TransactionSuccessScreen(
                 amount = amount,
                 symbol = symbol,
                 recipient = recipient,
                 txHash = txHash,
+                networkName = networkName,
                 onDone = {
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = true }

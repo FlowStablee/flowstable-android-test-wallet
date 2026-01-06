@@ -33,7 +33,7 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 @Composable
 fun TransferScreen(
     onBack: () -> Unit,
-    onTransactionSuccess: (String, String, String, String) -> Unit,
+    onTransactionSuccess: (String, String, String, String, String) -> Unit,
     initialSymbol: String? = null,
     viewModel: WalletViewModel = hiltViewModel()
 ) {
@@ -191,7 +191,7 @@ fun TransferScreen(
                                 isSending = false
                                 
                                 if (txHash != null) {
-                                    onTransactionSuccess(amount, selectedAsset!!.symbol, recipientAddress, txHash)
+                                    onTransactionSuccess(amount, selectedAsset!!.symbol, recipientAddress, txHash, selectedAsset!!.networkName)
                                 } else {
                                     errorMsg = "Transaction Failed. Please check network/rpc."
                                 }

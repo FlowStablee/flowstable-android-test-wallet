@@ -102,7 +102,7 @@ fun TransactionResultScreen(
 
         // Large Animated Header Icon
         Box(
-            modifier = Modifier.size(140.dp),
+            modifier = Modifier.size(100.dp),
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -283,11 +283,13 @@ fun TransactionResultScreen(
 }
 
 // Helper to prevent scientific notation for small numbers or truncate huge ones
+// Helper to prevent scientific notation for small numbers or truncate huge ones
 fun simpleFormatAmount(amount: String): String {
-    return if (amount.length > 12) {
-        amount.take(12) + "..."
-    } else {
-        amount
+    return try {
+        val bd = java.math.BigDecimal(amount)
+        bd.stripTrailingZeros().toPlainString()
+    } catch (e: Exception) {
+        if (amount.length > 12) amount.take(12) + "..." else amount
     }
 }
 
@@ -327,7 +329,7 @@ fun DetailRow(
             )
             
             if (isCopyable && onCopy != null) {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 IconButton(
                     onClick = onCopy,
                     modifier = Modifier.size(20.dp)
@@ -358,11 +360,13 @@ fun DetailRow(
 
 // Keep old function for backward compatibility
 @Composable
+@Composable
 fun TransactionSuccessScreen(
     amount: String,
     symbol: String,
     recipient: String,
     txHash: String,
+    networkName: String = "Ethereum",
     onDone: () -> Unit
 ) {
     TransactionResultScreen(
@@ -371,6 +375,7 @@ fun TransactionSuccessScreen(
         symbol = symbol,
         recipient = recipient,
         txHash = txHash,
+        networkName = networkName,
         onDone = onDone
     )
 }

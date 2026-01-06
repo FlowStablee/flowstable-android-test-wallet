@@ -170,7 +170,7 @@ fun TransactionItem(
             // Amount + Status
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "${if(isReceive) "+" else "-"} ${tx.value} ${tx.symbol}",
+                    text = "${if(isReceive) "+" else "-"} ${formatTransactionAmount(tx.value)} ${tx.symbol}",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = if (isReceive) Color(0xFF00C853) else MaterialTheme.colorScheme.onSurface
@@ -282,7 +282,7 @@ fun TransactionDetailDialog(
                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "${if(isReceive) "+" else "-"} ${transaction.value}",
+                        text = "${if(isReceive) "+" else "-"} ${formatTransactionAmount(transaction.value)}",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isReceive) Color(0xFF00C853) else MaterialTheme.colorScheme.onSurface,
@@ -330,6 +330,7 @@ fun TransactionDetailDialog(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
+                            Spacer(modifier = Modifier.width(12.dp))
                             Icon(
                                 Icons.Default.ContentCopy,
                                 contentDescription = "Copy",
@@ -387,5 +388,15 @@ private fun DetailRow(label: String, value: String) {
     ) {
         Text(label, fontSize = 14.sp, color = Color.Gray)
         Text(value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+private fun formatTransactionAmount(value: String): String {
+    return try {
+        // Parse and format to avoid scientific notation (e.g. 1E-10) and strip trailing zeros
+        val bd = java.math.BigDecimal(value)
+        bd.stripTrailingZeros().toPlainString()
+    } catch (e: Exception) {
+        value
     }
 }
