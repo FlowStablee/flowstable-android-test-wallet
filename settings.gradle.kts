@@ -13,11 +13,12 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        jcenter() // Fallback for sporadic Maven Central 403s
     }
 }
 rootProject.name = "FlowStableWallet"
