@@ -283,7 +283,6 @@ fun TransactionResultScreen(
 }
 
 // Helper to prevent scientific notation for small numbers or truncate huge ones
-// Helper to prevent scientific notation for small numbers or truncate huge ones
 fun simpleFormatAmount(amount: String): String {
     return try {
         val bd = java.math.BigDecimal(amount)
@@ -359,7 +358,6 @@ fun DetailRow(
 }
 
 // Keep old function for backward compatibility
-@Composable
 @Composable
 fun TransactionSuccessScreen(
     amount: String,
