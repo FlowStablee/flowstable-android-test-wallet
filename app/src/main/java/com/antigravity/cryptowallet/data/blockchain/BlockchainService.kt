@@ -210,4 +210,105 @@ class BlockchainService @Inject constructor() {
             throw e
         }
     }
+
+    suspend fun cancelTransaction(rpcUrl: String, credentials: Credentials, originalTxHash: String): String = withContext(Dispatchers.IO) {
+        try {
+            kotlinx.coroutines.withTimeout(60_000L) {
+                val web3j = getWeb3j(rpcUrl)
+
+                // 1. Fetch Original Transaction
+                val transaction = web3j.ethGetTransactionByHash(originalTxHash).send().transaction.orElse(null)
+                    ?: throw Exception("Original transaction not found or dropped")
+
+                if (transaction.blockNumber != null) {
+                    throw Exception("Transaction already mined in block ${transaction.blockNumber}")
+                }
+
+                // 2. Prepare Cancellation (Self-transfer 0 ETH)
+                val nonce = transaction.nonce
+                
+                // Increase Gas Price by 15% (min 1.15x)
+                val originalGasPrice = transaction.gasPrice
+                val newGasPrice = BigDecimal(originalGasPrice).multiply(BigDecimal("1.15")).toBigInteger()
+                
+                val gasLimit = BigInteger.valueOf(21000)
+
+                // 3. Sign & Send
+                val rawTransaction = RawTransaction.createEtherTransaction(
+                    nonce, newGasPrice, gasLimit, credentials.address, BigInteger.ZERO
+                )
+
+                val signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials)
+                val hexValue = Numeric.toHexString(signedMessage)
+
+                val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
+                ethSendTransaction.transactionHash ?: throw Exception(ethSendTransaction.error?.message ?: "Cancellation failed")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
+    }
+
+    suspend fun speedUpTransaction(rpcUrl: String, credentials: Credentials, originalTxHash: String): String = withContext(Dispatchers.IO) {
+        try {
+            kotlinx.coroutines.withTimeout(60_000L) {
+                val web3j = getWeb3j(rpcUrl)
+
+                // 1. Fetch Original Transaction
+                val transaction = web3j.ethGetTransactionByHash(originalTxHash).send().transaction.orElse(null)
+                    ?: throw Exception("Original transaction not found or dropped")
+
+                if (transaction.blockNumber != null) {
+                    throw Exception("Transaction already mined in block ${transaction.blockNumber}")
+                }
+
+                // 2. Prepare Replacement
+                val nonce = transaction.nonce
+                
+                // Increase Gas Price by 15%
+                val originalGasPrice = transaction.gasPrice
+                val newGasPrice = BigDecimal(originalGasPrice).multiply(BigDecimal("1.15")).toBigInteger()
+
+                val toAddress = transaction.to
+                val value = transaction.value
+                val data = transaction.input
+
+                // Re-estimate gas or use original + buffer (unsafe to trust original blindly if it failed due to OOG, but speedup usually implies low gas PRICE. We will re-check contract status).
+                // Simple logic: if data is empty/simple, use 21000, else re-estimate.
+                
+                val gasLimit: BigInteger
+                if (data == "0x" || data.isEmpty()) {
+                     gasLimit = BigInteger.valueOf(21000)
+                } else {
+                     // Re-estimate
+                     val estimateTx = org.web3j.protocol.core.methods.request.Transaction.createTransaction(
+                         transaction.from, nonce, newGasPrice, null, toAddress, value, data
+                     )
+                     val estimated = try {
+                         web3j.ethEstimateGas(estimateTx).send().amountUsed
+                     } catch (e: Exception) {
+                         // Fallback to original limit + 20%
+                         BigDecimal(transaction.gas).multiply(BigDecimal("1.2")).toBigInteger()
+                     }
+                     // Apply 25% buffer on top of estimate
+                     gasLimit = BigDecimal(estimated).multiply(BigDecimal("1.25")).toBigInteger()
+                }
+
+                // 3. Sign & Send
+                val rawTransaction = RawTransaction.createTransaction(
+                    nonce, newGasPrice, gasLimit, toAddress, value, data
+                )
+
+                val signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials)
+                val hexValue = Numeric.toHexString(signedMessage)
+
+                val ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send()
+                ethSendTransaction.transactionHash ?: throw Exception(ethSendTransaction.error?.message ?: "Speedup failed")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
+    }
 }
