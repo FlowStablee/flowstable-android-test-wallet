@@ -210,6 +210,16 @@ class BlockchainService @Inject constructor() {
             throw e
         }
     }
+    
+    suspend fun getTransactionReceipt(rpcUrl: String, txHash: String): org.web3j.protocol.core.methods.response.TransactionReceipt? = withContext(Dispatchers.IO) {
+        try {
+            val web3j = getWeb3j(rpcUrl)
+            web3j.ethGetTransactionReceipt(txHash).send().transactionReceipt.orElse(null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     suspend fun cancelTransaction(rpcUrl: String, credentials: Credentials, originalTxHash: String): String = withContext(Dispatchers.IO) {
         try {

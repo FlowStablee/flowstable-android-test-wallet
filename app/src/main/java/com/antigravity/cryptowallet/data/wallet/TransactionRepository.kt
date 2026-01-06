@@ -1,6 +1,7 @@
 package com.antigravity.cryptowallet.data.wallet
 
 import com.antigravity.cryptowallet.data.api.ExplorerApi
+import com.antigravity.cryptowallet.data.blockchain.BlockchainService
 import com.antigravity.cryptowallet.data.blockchain.Network
 import com.antigravity.cryptowallet.data.db.TransactionDao
 import com.antigravity.cryptowallet.data.db.TransactionEntity
@@ -14,7 +15,8 @@ import javax.inject.Singleton
 @Singleton
 class TransactionRepository @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val explorerApi: ExplorerApi
+    private val explorerApi: ExplorerApi,
+    private val blockchainService: BlockchainService
 ) {
     val transactions: Flow<List<TransactionEntity>> = transactionDao.getAllTransactions()
 
@@ -48,6 +50,29 @@ class TransactionRepository @Inject constructor(
         }
     }
 
+    suspend fun checkPendingTransactions(rpcUrl: String) = withContext(Dispatchers.IO) {
+        val pendingTransactions = transactionDao.getPendingTransactions()
+        for (tx in pendingTransactions) {
+            try {
+                val receipt = blockchainService.getTransactionReceipt(rpcUrl, tx.hash)
+                if (receipt != null) {
+                    val status = if (receipt.isStatusOK) "success" else "failed"
+                    transactionDao.updateStatus(tx.hash, status)
+                } else {
+                    // Check for timeout or dropped tx logic could go here
+                    // specific for re-orgs: if tx is very old (e.g. > 1 hour) and no receipt, track as failed?
+                    // For now, keep pending.
+                    val age = System.currentTimeMillis() - tx.timestamp
+                    if (age > 3600_000) { // 1 hour
+                         // Optional: mark failed or dropped
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     suspend fun addTransaction(
         hash: String,
         from: String,
@@ -70,5 +95,9 @@ class TransactionRepository @Inject constructor(
             network = network
         )
         transactionDao.insertTransaction(transaction)
+    }
+
+    suspend fun updateStatus(hash: String, status: String) {
+        transactionDao.updateStatus(hash, status)
     }
 }

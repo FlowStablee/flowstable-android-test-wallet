@@ -140,6 +140,16 @@ class AssetRepository @Inject constructor(
                     null
                 }
             }
+            }
+        }
+
+        // 5. Update Pending Transactions
+        networkRepository.networks.forEach { net ->
+             try {
+                 transactionRepository.checkPendingTransactions(net.rpcUrl)
+             } catch (e: Exception) {
+                 e.printStackTrace()
+             }
         }
 
         // Wait for all
@@ -197,11 +207,70 @@ class AssetRepository @Inject constructor(
             value = amount,
             symbol = asset.symbol,
             type = "send",
-            status = "success", // Ideally pending then poll, but for now simple
+            status = "pending",
             network = net.name
         )
         
+        // Trigger generic check (best effort)
+        try {
+            transactionRepository.checkPendingTransactions(net.rpcUrl)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         refreshAssets()
         txHash
+    }
+    }
+
+    suspend fun cancelTransaction(originalTxHash: String, chainId: String): String = withContext(Dispatchers.IO) {
+        val credentials = walletRepository.activeCredentials ?: throw Exception("Wallet not loaded")
+        val net = networkRepository.getNetwork(chainId)
+        
+        val newHash = blockchainService.cancelTransaction(net.rpcUrl, credentials, originalTxHash)
+        
+        // Mark old as dropped/replaced (best effort)
+        try {
+             transactionRepository.checkPendingTransactions(net.rpcUrl)
+             transactionRepository.updateStatus(originalTxHash, "replaced")
+        } catch (e: Exception) { e.printStackTrace() }
+
+        // Add new cancellation tx
+        transactionRepository.addTransaction(
+            hash = newHash,
+            from = credentials.address,
+            to = credentials.address, 
+            value = "0",
+            symbol = net.symbol,
+            type = "cancel",
+            status = "pending",
+            network = net.name
+        )
+         refreshAssets()
+         newHash
+    }
+
+    suspend fun speedUpTransaction(originalTxHash: String, chainId: String): String = withContext(Dispatchers.IO) {
+        val credentials = walletRepository.activeCredentials ?: throw Exception("Wallet not loaded")
+        val net = networkRepository.getNetwork(chainId)
+
+        val newHash = blockchainService.speedUpTransaction(net.rpcUrl, credentials, originalTxHash)
+
+        try {
+            transactionRepository.updateStatus(originalTxHash, "replaced")
+        } catch (e: Exception) { e.printStackTrace() }
+        
+        transactionRepository.addTransaction(
+            hash = newHash,
+            from = credentials.address,
+            to = "", 
+            value = "0", 
+            symbol = net.symbol,
+            type = "speed_up",
+            status = "pending",
+            network = net.name
+        )
+        refreshAssets()
+        newHash
     }
 }
