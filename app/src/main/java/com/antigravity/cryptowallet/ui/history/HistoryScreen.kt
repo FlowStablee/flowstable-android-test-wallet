@@ -275,12 +275,29 @@ fun TransactionDetailDialog(
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Amount
-                Text(
-                    text = "${if(isReceive) "+" else "-"} ${transaction.value} ${transaction.symbol}",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Black,
-                    color = if (isReceive) Color(0xFF00C853) else MaterialTheme.colorScheme.onSurface
-                )
+                // Amount Row
+                Row(
+                   verticalAlignment = Alignment.CenterVertically,
+                   horizontalArrangement = Arrangement.Center,
+                   modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "${if(isReceive) "+" else "-"} ${transaction.value}",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isReceive) Color(0xFF00C853) else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = transaction.symbol,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isReceive) Color(0xFF00C853) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
