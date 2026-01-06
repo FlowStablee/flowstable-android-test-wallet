@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class BlockchainService @Inject constructor() {
 
-    private val gasSafetyBuffer = 1.25 // 25% safety buffer
+    // Gas buffers are now dynamic based on transaction type
 
     // 1. Reusable OkHttpClient with increased timeouts
     private val okHttpClient: okhttp3.OkHttpClient = okhttp3.OkHttpClient.Builder()
@@ -93,7 +93,9 @@ class BlockchainService @Inject constructor() {
                 }
 
                 // 4. Apply Buffer
-                val gasLimit = BigDecimal(estimatedGas).multiply(BigDecimal(gasSafetyBuffer)).toBigInteger()
+                // ETH -> EOA: +10%, ETH -> Contract: +30%
+                val buffer = if (isContract) 1.30 else 1.10
+                val gasLimit = BigDecimal(estimatedGas).multiply(BigDecimal(buffer)).toBigInteger()
 
                 // 5. Pre-flight Balance Check (Total Cost = Gas * Price + Value)
                 val totalCost = (gasLimit * gasPrice) + amountWei
@@ -181,7 +183,9 @@ class BlockchainService @Inject constructor() {
                 }
 
                 // 4. Apply Buffer
-                val gasLimit = BigDecimal(estimatedGas).multiply(BigDecimal(gasSafetyBuffer)).toBigInteger()
+                // ERC-20 Transfers: +30%
+                val buffer = 1.30
+                val gasLimit = BigDecimal(estimatedGas).multiply(BigDecimal(buffer)).toBigInteger()
 
                  // 5. Check Gas Money (ETH Balance > Gas Limit * Gas Price)
                 val gasCost = gasLimit * gasPrice
