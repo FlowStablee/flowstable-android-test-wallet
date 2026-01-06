@@ -38,10 +38,12 @@ fun BrutalistButton(
     modifier: Modifier = Modifier,
     inverted: Boolean = false,
     enabled: Boolean = true,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    textColor: Color? = null,
+    backgroundColor: Color? = null
 ) {
-    val backgroundColor = if (inverted) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
-    val contentColor = if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background
+    val finalBackgroundColor = backgroundColor ?: if (inverted) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
+    val finalContentColor = textColor ?: if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background
     
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -75,7 +77,7 @@ fun BrutalistButton(
                 .height(48.dp)
                 .offset(x = 3.dp - offset, y = 3.dp - offset)
                 .background(
-                    if (enabled) backgroundColor else Color.Gray,
+                    if (enabled) finalBackgroundColor else Color.Gray,
                     RoundedCornerShape(12.dp)
                 )
                 .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp)),
@@ -90,14 +92,14 @@ fun BrutalistButton(
                         imageVector = icon,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = contentColor
+                        tint = finalContentColor
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                 }
                 Text(
                     text = text.uppercase(),
                     style = MaterialTheme.typography.labelLarge.copy(
-                        color = if (enabled) contentColor else Color.LightGray,
+                        color = if (enabled) finalContentColor else Color.LightGray,
                         fontWeight = FontWeight.Black,
                         fontSize = 13.sp,
                         letterSpacing = 1.sp
