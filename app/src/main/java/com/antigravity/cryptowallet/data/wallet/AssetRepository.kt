@@ -190,13 +190,13 @@ class AssetRepository @Inject constructor(
         
         val txHash = if (asset.id.startsWith("native-")) {
             val amountWei = amountValue.multiply(BigDecimal.TEN.pow(18)).toBigInteger()
-            blockchainService.sendEth(net.rpcUrl, credentials, toAddress, amountWei)
+            blockchainService.sendEth(net.rpcUrl, net.id, credentials, toAddress, amountWei)
         } else {
             // Token
             val tokenId = asset.id.removePrefix("token-").toLongOrNull()
             val token = tokenId?.let { tokenDao.getTokenById(it) } ?: throw Exception("Token info not found")
             val amountRaw = amountValue.multiply(BigDecimal.TEN.pow(token.decimals)).toBigInteger()
-            blockchainService.sendToken(net.rpcUrl, credentials, token.contractAddress!!, toAddress, amountRaw)
+            blockchainService.sendToken(net.rpcUrl, net.id, credentials, token.contractAddress!!, toAddress, amountRaw)
         }
         
         // Add to history
@@ -226,7 +226,7 @@ class AssetRepository @Inject constructor(
         val credentials = walletRepository.activeCredentials ?: throw Exception("Wallet not loaded")
         val net = networkRepository.getNetwork(chainId)
         
-        val newHash = blockchainService.cancelTransaction(net.rpcUrl, credentials, originalTxHash)
+        val newHash = blockchainService.cancelTransaction(net.rpcUrl, net.id, credentials, originalTxHash)
         
         // Mark old as dropped/replaced (best effort)
         try {
@@ -253,7 +253,7 @@ class AssetRepository @Inject constructor(
         val credentials = walletRepository.activeCredentials ?: throw Exception("Wallet not loaded")
         val net = networkRepository.getNetwork(chainId)
 
-        val newHash = blockchainService.speedUpTransaction(net.rpcUrl, credentials, originalTxHash)
+        val newHash = blockchainService.speedUpTransaction(net.rpcUrl, net.id, credentials, originalTxHash)
 
         try {
             transactionRepository.updateStatus(originalTxHash, "replaced")

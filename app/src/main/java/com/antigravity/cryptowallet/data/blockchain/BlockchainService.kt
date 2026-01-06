@@ -53,7 +53,54 @@ class BlockchainService @Inject constructor() {
         }
     }
 
-    suspend fun sendEth(rpcUrl: String, credentials: Credentials, toAddress: String, amountWei: BigInteger): String = withContext(Dispatchers.IO) {
+    // --- L2 Fee Helpers ---
+
+    private suspend fun fetchGasPrice(web3j: Web3j, networkId: String): BigInteger {
+        val rawPrice = web3j.ethGasPrice().send().gasPrice
+        return when (networkId) {
+            "matic" -> {
+                // Polygon: +25% buffer for priority
+                BigDecimal(rawPrice).multiply(BigDecimal("1.25")).toBigInteger()
+            }
+            else -> rawPrice // Standard
+        }
+    }
+
+    private suspend fun fetchGasLimit(
+        web3j: Web3j,
+        transaction: org.web3j.protocol.core.methods.request.Transaction,
+        networkId: String,
+        isContract: Boolean = false,
+        isTokenTransfer: Boolean = false
+    ): BigInteger {
+        val estimated = try {
+            val result = web3j.ethEstimateGas(transaction).send()
+            if (result.hasError()) {
+                if (isTokenTransfer || isContract) BigInteger.valueOf(100_000) else BigInteger.valueOf(21_000)
+            } else {
+                result.amountUsed
+            }
+        } catch (e: Exception) {
+             if (isTokenTransfer || isContract) BigInteger.valueOf(100_000) else BigInteger.valueOf(21_000)
+        }
+
+        // Apply dynamic buffers
+        return when (networkId) {
+            "arb" -> {
+                // Arbitrum: +100% buffer (2.0x) to cover L1 calldata costs missing from simple estimate
+                BigDecimal(estimated).multiply(BigDecimal("2.0")).toBigInteger()
+            }
+            else -> {
+                // Standard: +30% for contracts/tokens, +10% for simple ETH
+                val buffer = if (isContract || isTokenTransfer) 1.30 else 1.10
+                BigDecimal(estimated).multiply(BigDecimal(buffer)).toBigInteger()
+            }
+        }
+    }
+
+    // -----------------------
+
+    suspend fun sendEth(rpcUrl: String, networkId: String, credentials: Credentials, toAddress: String, amountWei: BigInteger): String = withContext(Dispatchers.IO) {
         try {
             // Longer timeout for transactions
             kotlinx.coroutines.withTimeout(60_000L) {
@@ -63,10 +110,10 @@ class BlockchainService @Inject constructor() {
                 val ethGetTransactionCount = web3j.ethGetTransactionCount(credentials.address, DefaultBlockParameterName.LATEST).send()
                 val nonce = ethGetTransactionCount.transactionCount
 
-                // 2. Get Gas Price
-                val gasPrice = web3j.ethGasPrice().send().gasPrice
+                // 2. Get Gas Price (L2 logic)
+                val gasPrice = fetchGasPrice(web3j, networkId)
 
-                // 3. Estimate Gas
+                // 3. Estimate Gas (L2 logic)
                 // Check if recipient is a contract
                 val ethGetCode = web3j.ethGetCode(toAddress, DefaultBlockParameterName.LATEST).send()
                 val isContract = ethGetCode.code != "0x"
@@ -75,36 +122,21 @@ class BlockchainService @Inject constructor() {
                     credentials.address,
                     nonce,
                     gasPrice,
-                    null, // limit unknown yet
+                    null,
                     toAddress,
                     amountWei
                 )
                 
-                val estimatedGas = try {
-                    val result = web3j.ethEstimateGas(estimateTransaction).send()
-                    if (result.hasError()) {
-                        // Fallback for standard transfers if estimate fails (rare but possible on some nodes)
-                         if (isContract) BigInteger.valueOf(100_000) else BigInteger.valueOf(21_000)
-                    } else {
-                        result.amountUsed
-                    }
-                } catch (e: Exception) {
-                    if (isContract) BigInteger.valueOf(100_000) else BigInteger.valueOf(21_000)
-                }
+                val gasLimit = fetchGasLimit(web3j, estimateTransaction, networkId, isContract = isContract)
 
-                // 4. Apply Buffer
-                // ETH -> EOA: +10%, ETH -> Contract: +30%
-                val buffer = if (isContract) 1.30 else 1.10
-                val gasLimit = BigDecimal(estimatedGas).multiply(BigDecimal(buffer)).toBigInteger()
-
-                // 5. Pre-flight Balance Check (Total Cost = Gas * Price + Value)
+                // 4. Pre-flight Balance Check (Total Cost = Gas * Price + Value)
                 val totalCost = (gasLimit * gasPrice) + amountWei
                 val balance = web3j.ethGetBalance(credentials.address, DefaultBlockParameterName.LATEST).send().balance
                 if (balance < totalCost) {
                     throw Exception("Insufficient balance to cover transfer + gas fees. Required: $totalCost, Available: $balance")
                 }
 
-                // 6. Sign & Send
+                // 5. Sign & Send
                 val rawTransaction = RawTransaction.createEtherTransaction(
                     nonce, gasPrice, gasLimit, toAddress, amountWei
                 )
@@ -144,7 +176,7 @@ class BlockchainService @Inject constructor() {
         }
     }
 
-    suspend fun sendToken(rpcUrl: String, credentials: Credentials, tokenAddress: String, toAddress: String, amount: BigInteger): String = withContext(Dispatchers.IO) {
+    suspend fun sendToken(rpcUrl: String, networkId: String, credentials: Credentials, tokenAddress: String, toAddress: String, amount: BigInteger): String = withContext(Dispatchers.IO) {
         try {
             kotlinx.coroutines.withTimeout(60_000L) {
                 val web3j = getWeb3j(rpcUrl)
@@ -153,8 +185,8 @@ class BlockchainService @Inject constructor() {
                 val ethGetTransactionCount = web3j.ethGetTransactionCount(credentials.address, DefaultBlockParameterName.LATEST).send()
                 val nonce = ethGetTransactionCount.transactionCount
 
-                // 2. Get Gas Price
-                val gasPrice = web3j.ethGasPrice().send().gasPrice
+                // 2. Get Gas Price (L2 logic used)
+                val gasPrice = fetchGasPrice(web3j, networkId)
 
                 // 3. Prepare Data & Estimate
                 val functionCode = "0xa9059cbb" // transfer(address,uint256)
@@ -171,30 +203,16 @@ class BlockchainService @Inject constructor() {
                     data
                 )
 
-                val estimatedGas = try {
-                     val result = web3j.ethEstimateGas(estimateTransaction).send()
-                     if (result.hasError()) {
-                         BigInteger.valueOf(100_000) // Fallback
-                     } else {
-                         result.amountUsed
-                     }
-                } catch (e: Exception) {
-                    BigInteger.valueOf(100_000)
-                }
+                val gasLimit = fetchGasLimit(web3j, estimateTransaction, networkId, isTokenTransfer = true)
 
-                // 4. Apply Buffer
-                // ERC-20 Transfers: +30%
-                val buffer = 1.30
-                val gasLimit = BigDecimal(estimatedGas).multiply(BigDecimal(buffer)).toBigInteger()
-
-                 // 5. Check Gas Money (ETH Balance > Gas Limit * Gas Price)
+                 // 4. Check Gas Money (ETH Balance > Gas Limit * Gas Price)
                 val gasCost = gasLimit * gasPrice
                 val ethBalance = web3j.ethGetBalance(credentials.address, DefaultBlockParameterName.LATEST).send().balance
                 if (ethBalance < gasCost) {
                     throw Exception("Insufficient ETH for gas fees. Required: $gasCost, Available: $ethBalance")
                 }
 
-                // 6. Sign & Send
+                // 5. Sign & Send
                 val rawTransaction = RawTransaction.createTransaction(
                     nonce, gasPrice, gasLimit, tokenAddress, data
                 )
@@ -221,7 +239,7 @@ class BlockchainService @Inject constructor() {
         }
     }
 
-    suspend fun cancelTransaction(rpcUrl: String, credentials: Credentials, originalTxHash: String): String = withContext(Dispatchers.IO) {
+    suspend fun cancelTransaction(rpcUrl: String, networkId: String, credentials: Credentials, originalTxHash: String): String = withContext(Dispatchers.IO) {
         try {
             kotlinx.coroutines.withTimeout(60_000L) {
                 val web3j = getWeb3j(rpcUrl)
@@ -238,8 +256,12 @@ class BlockchainService @Inject constructor() {
                 val nonce = transaction.nonce
                 
                 // Increase Gas Price by 15% (min 1.15x)
-                val originalGasPrice = transaction.gasPrice
-                val newGasPrice = BigDecimal(originalGasPrice).multiply(BigDecimal("1.15")).toBigInteger()
+                // Use fetched price if it's higher than replacement requirement? 
+                // Standard logic: Max(Original * 1.15, CurrentNetworkPrice)
+                val currentGasPrice = fetchGasPrice(web3j, networkId)
+                val minReplacementPrice = BigDecimal(transaction.gasPrice).multiply(BigDecimal("1.15")).toBigInteger()
+                
+                val newGasPrice = if (currentGasPrice > minReplacementPrice) currentGasPrice else minReplacementPrice
                 
                 val gasLimit = BigInteger.valueOf(21000)
 
@@ -260,7 +282,7 @@ class BlockchainService @Inject constructor() {
         }
     }
 
-    suspend fun speedUpTransaction(rpcUrl: String, credentials: Credentials, originalTxHash: String): String = withContext(Dispatchers.IO) {
+    suspend fun speedUpTransaction(rpcUrl: String, networkId: String, credentials: Credentials, originalTxHash: String): String = withContext(Dispatchers.IO) {
         try {
             kotlinx.coroutines.withTimeout(60_000L) {
                 val web3j = getWeb3j(rpcUrl)
@@ -277,33 +299,21 @@ class BlockchainService @Inject constructor() {
                 val nonce = transaction.nonce
                 
                 // Increase Gas Price by 15%
-                val originalGasPrice = transaction.gasPrice
-                val newGasPrice = BigDecimal(originalGasPrice).multiply(BigDecimal("1.15")).toBigInteger()
+                val currentGasPrice = fetchGasPrice(web3j, networkId)
+                val minReplacementPrice = BigDecimal(transaction.gasPrice).multiply(BigDecimal("1.15")).toBigInteger()
+                val newGasPrice = if (currentGasPrice > minReplacementPrice) currentGasPrice else minReplacementPrice
 
                 val toAddress = transaction.to
                 val value = transaction.value
                 val data = transaction.input
-
-                // Re-estimate gas or use original + buffer (unsafe to trust original blindly if it failed due to OOG, but speedup usually implies low gas PRICE. We will re-check contract status).
-                // Simple logic: if data is empty/simple, use 21000, else re-estimate.
                 
-                val gasLimit: BigInteger
-                if (data == "0x" || data.isEmpty()) {
-                     gasLimit = BigInteger.valueOf(21000)
-                } else {
-                     // Re-estimate
-                     val estimateTx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
-                         transaction.from, nonce, newGasPrice, null, toAddress, value, data
-                     )
-                     val estimated = try {
-                         web3j.ethEstimateGas(estimateTx).send().amountUsed
-                     } catch (e: Exception) {
-                         // Fallback to original limit + 20%
-                         BigDecimal(transaction.gas).multiply(BigDecimal("1.2")).toBigInteger()
-                     }
-                     // Apply 25% buffer on top of estimate
-                     gasLimit = BigDecimal(estimated).multiply(BigDecimal("1.25")).toBigInteger()
-                }
+                // New logic: Use fetchGasLimit to get L2 buffered limit
+                val estimateTx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
+                     transaction.from, nonce, newGasPrice, null, toAddress, value, data
+                )
+                
+                val isTokenOrContract = data != null && data != "0x" && data.isNotEmpty()
+                val gasLimit = fetchGasLimit(web3j, estimateTx, networkId, isContract = isTokenOrContract)
 
                 // 3. Sign & Send
                 val rawTransaction = RawTransaction.createTransaction(
