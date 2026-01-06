@@ -141,7 +141,7 @@ class AssetRepository @Inject constructor(
                 }
             }
             }
-        }
+
 
         // 5. Update Pending Transactions
         networkRepository.networks.forEach { net ->
