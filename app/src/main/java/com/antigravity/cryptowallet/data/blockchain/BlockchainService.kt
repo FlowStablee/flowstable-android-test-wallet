@@ -282,7 +282,7 @@ class BlockchainService @Inject constructor() {
                      gasLimit = BigInteger.valueOf(21000)
                 } else {
                      // Re-estimate
-                     val estimateTx = org.web3j.protocol.core.methods.request.Transaction.createTransaction(
+                     val estimateTx = org.web3j.protocol.core.methods.request.Transaction.createFunctionCallTransaction(
                          transaction.from, nonce, newGasPrice, null, toAddress, value, data
                      )
                      val estimated = try {
