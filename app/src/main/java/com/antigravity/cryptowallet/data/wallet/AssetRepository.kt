@@ -221,7 +221,6 @@ class AssetRepository @Inject constructor(
         refreshAssets()
         txHash
     }
-    }
 
     suspend fun cancelTransaction(originalTxHash: String, chainId: String): String = withContext(Dispatchers.IO) {
         val credentials = walletRepository.activeCredentials ?: throw Exception("Wallet not loaded")
