@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -23,100 +24,116 @@ fun SplashScreen(
     onNavigateNext: () -> Unit
 ) {
     var startAnimation by remember { mutableStateOf(false) }
-    val duration = 2000
-
-    val scale by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0.5f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "scale"
-    )
-
-    val rotation by animateFloatAsState(
-        targetValue = if (startAnimation) 360f else 0f,
-        animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
-        label = "rotation"
-    )
-
+    
+    // Decrypting Text Effect
+    val targetText = "FLOWSTABLE"
+    var displayedText by remember { mutableStateOf("") }
+    val characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+    
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(2500) // 2.5 seconds splash
+        
+        // Decrypt text
+        var ticks = 0
+        while (ticks < 20) {
+            displayedText = (0 until targetText.length).map { 
+                characters.random() 
+            }.joinToString("")
+            delay(50)
+            ticks++
+        }
+        
+        // Reveal text one by one
+        for (i in 1..targetText.length) {
+            displayedText = targetText.take(i) + (0 until (targetText.length - i)).map { 
+                characters.random() 
+            }.joinToString("")
+            delay(50)
+        }
+        
+        delay(1000)
         onNavigateNext()
     }
+
+    // Background Grid Animation
+    val infiniteTransition = rememberInfiniteTransition(label = "grid")
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 100f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "offset"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(Color.Black), // Techy Dark Background
         contentAlignment = Alignment.Center
     ) {
+        // Grid Background
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize().alpha(0.2f)) {
+            val step = 40.dp.toPx()
+            for (x in 0..size.width.toInt() step step.toInt()) {
+                drawLine(
+                    color = Color.Green,
+                    start = androidx.compose.ui.geometry.Offset(x.toFloat(), 0f),
+                    end = androidx.compose.ui.geometry.Offset(x.toFloat(), size.height),
+                    strokeWidth = 1f
+                )
+            }
+            for (y in 0..size.height.toInt() step step.toInt()) {
+                val animatedY = (y + offsetY) % size.height
+                drawLine(
+                    color = Color.Green,
+                    start = androidx.compose.ui.geometry.Offset(0f, animatedY),
+                    end = androidx.compose.ui.geometry.Offset(size.width, animatedY),
+                    strokeWidth = 1f
+                )
+            }
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Animated Logo Box
+            // Hexagon/Tech Logo Placeholder
             Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .scale(scale)
-                    .rotate(rotation)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
-                    .border(4.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(24.dp)),
+                    .size(100.dp)
+                    .border(2.dp, Color.Green, RoundedCornerShape(20.dp))
+                    .rotate(45f),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "FS",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Black
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color.Green.copy(alpha = 0.2f))
+                        .border(1.dp, Color.Green, RoundedCornerShape(10.dp))
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // Text with Brutalist style
+            // Decrypting Text
             Text(
-                text = "FLOWSTABLE",
+                text = displayedText,
                 style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Black,
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Secure. Decentralized. Brutal.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
-            )
-        }
-
-        // Bottom Loading Bar (Visual only)
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 64.dp)
-                .width(200.dp)
-                .height(8.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp))
-                .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
-        ) {
-            val progress by animateFloatAsState(
-                targetValue = if (startAnimation) 1f else 0f,
-                animationSpec = tween(durationMillis = 2000),
-                label = "progress"
+                color = Color.Green,
+                fontWeight = FontWeight.Bold,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                letterSpacing = 4.sp
             )
             
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(progress)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "SYSTEM READY",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Green.copy(alpha = 0.5f),
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
             )
         }
     }

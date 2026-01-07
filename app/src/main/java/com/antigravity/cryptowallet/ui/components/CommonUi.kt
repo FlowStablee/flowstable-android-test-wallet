@@ -67,7 +67,7 @@ fun BrutalistButton(
                 .fillMaxWidth()
                 .height(48.dp)
                 .offset(3.dp, 3.dp)
-                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(24.dp))
         )
 
         // Main Button Layer
@@ -78,9 +78,9 @@ fun BrutalistButton(
                 .offset(x = 3.dp - offset, y = 3.dp - offset)
                 .background(
                     if (enabled) finalBackgroundColor else Color.Gray,
-                    RoundedCornerShape(12.dp)
+                    RoundedCornerShape(24.dp)
                 )
-                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp)),
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(24.dp)),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -124,7 +124,7 @@ fun BrutalistTextField(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
             if (value.isEmpty()) {
@@ -157,8 +157,8 @@ fun BrutalistHeader(text: String) {
     Box(
         modifier = Modifier
             .padding(vertical = 12.dp)
-            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
@@ -183,15 +183,15 @@ fun BrutalistInfoRow(label: String, value: String) {
             modifier = Modifier
                 .matchParentSize()
                 .offset(3.dp, 3.dp)
-                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
         )
         
         // Content
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
-                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -228,9 +228,9 @@ fun BrutalistBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.background, RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
+            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(32.dp))
+            .background(MaterialTheme.colorScheme.background, RoundedCornerShape(32.dp))
+            .clip(RoundedCornerShape(32.dp))
             .height(64.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -241,7 +241,7 @@ fun BrutalistBottomBar(
                     .weight(1f)
                     .fillMaxHeight()
                     .padding(4.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(24.dp))
                     .background(if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Transparent)
                     .clickable { onItemClick(item.route) }
                     .padding(4.dp),
