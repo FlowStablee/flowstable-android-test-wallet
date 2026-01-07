@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Report – Checkout completed
-      uses: appleboy/telegram-action@v0.1.1
+      uses: appleboy/telegram-action@v1.0.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -30,7 +30,7 @@ jobs:
         distribution: 'temurin'
 
     - name: Report – JDK ready
-      uses: appleboy/telegram-action@v0.1.1
+      uses: appleboy/telegram-action@v1.0.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -42,7 +42,7 @@ jobs:
         gradle-version: '8.4'
 
     - name: Report – Gradle ready
-      uses: appleboy/telegram-action@v0.1.1
+      uses: appleboy/telegram-action@v1.0.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -53,7 +53,7 @@ jobs:
 
     - name: Report – Build completed
       if: success()
-      uses: appleboy/telegram-action@v0.1.1
+      uses: appleboy/telegram-action@v1.0.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -64,7 +64,7 @@ jobs:
 
     - name: Send APK to Telegram
       if: success()
-      uses: appleboy/telegram-action@v0.1.1
+      uses: appleboy/telegram-action@v1.0.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -95,7 +95,7 @@ jobs:
 
     - name: Final build report
       if: always()
-      uses: appleboy/telegram-action@v0.1.1
+      uses: appleboy/telegram-action@v1.0.1
       with:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
